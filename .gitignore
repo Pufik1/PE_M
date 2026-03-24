@@ -1,25 +1,15 @@
-# Compiled and build artifacts
-*.pyc
-__pycache__/
+# Examples
+Input:
+### Added files:
+['polesie_erp/users.php']
 
-# Dependencies
-vendor/
-composer.lock
+### Deleted files:
+[]
 
-# Environment
-.env
-.env.local
-*.env.*
+### Modified files:
+['polesie_erp/users.php']
 
-# Logs and temp files
-*.log
-*.tmp
-*.swp
+###current .gitignore Content
 
-# Editors
-.vscode/
-.idea/
-
-# OS generated files
-.DS_Store
-Thumbs.db
+Expected Output:
+(empty — output nothing)

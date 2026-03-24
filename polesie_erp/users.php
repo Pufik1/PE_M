@@ -188,17 +188,24 @@ include 'header.php';
                         <?= date('d.m.Y', strtotime($user['created_at'])) ?>
                     </td>
                     <?php if (checkRole(['admin', 'director'])): ?>
-                    <td>
-                        <button class="btn btn-sm btn-secondary" 
-                                onclick="openEditUserModal(
+                    <td style="width: 100px;">
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="openEditUserModal(
                                     <?= $user['id'] ?>,
                                     '<?= addslashes($user['full_name']) ?>',
                                     '<?= addslashes($user['login']) ?>',
                                     '<?= $user['role'] ?>',
                                     '<?= addslashes($user['department'] ?? '') ?>'
-                                )">
-                            Редактировать
-                        </button>
+                                )" 
+                                    style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; cursor: pointer; transition: all 0.2s;"
+                                    title="Редактировать"
+                                    onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.transform='translateY(-1px)';"
+                                    onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.transform='translateY(0)';">
+                                <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </td>
                     <?php endif; ?>
                 </tr>
@@ -211,36 +218,35 @@ include 'header.php';
 
 <?php endif; ?>
 
-<!-- Modal: Добавить/Редактировать сотрудника -->
-<div id="userModal" class="modal" style="display: none;">
-    <div class="modal-overlay"></div>
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h3 id="modalTitle">Добавить сотрудника</h3>
-            <button class="btn-close" onclick="closeUserModal()">&times;</button>
+<!-- Модальное окно для добавления/редактирования сотрудника -->
+<div id="userModal" class="modal-overlay" style="display: none;" onclick="closeUserModal(event)">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="card-header" style="border-bottom: 1px solid var(--border); padding: 20px 24px;">
+            <h3 id="userModalTitle" style="margin: 0;">Добавить сотрудника</h3>
+            <button onclick="closeUserModalDirect()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
-        <div class="modal-body">
-            <form id="userForm">
-                <input type="hidden" id="userId" name="id" value="">
-                
-                <div class="form-group">
-                    <label for="full_name">ФИО *</label>
-                    <input type="text" id="full_name" name="full_name" class="form-control" required>
+        <form id="userForm" onsubmit="submitUserForm(event)" style="padding: 24px;">
+            <input type="hidden" name="id" id="userId">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div style="grid-column: 1 / -1;">
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">ФИО *</label>
+                    <input type="text" name="full_name" id="fullName" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
                 </div>
-                
-                <div class="form-group">
-                    <label for="login">Логин *</label>
-                    <input type="text" id="login" name="login" class="form-control" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Логин *</label>
+                    <input type="text" name="login" id="login" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
                 </div>
-                
-                <div class="form-group">
-                    <label for="password">Пароль <span id="passwordHint">(оставьте пустым для сохранения текущего)</span></label>
-                    <input type="password" id="password" name="password" class="form-control">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Пароль <span id="passwordHint" style="font-weight: normal; font-size: 11px;">(оставьте пустым для сохранения текущего)</span></label>
+                    <input type="password" name="password" id="password" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
                 </div>
-                
-                <div class="form-group">
-                    <label for="role">Роль *</label>
-                    <select id="role" name="role" class="form-control" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Роль *</label>
+                    <select name="role" id="role" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
                         <option value="">Выберите роль</option>
                         <option value="admin">Администратор</option>
                         <option value="director">Директор</option>
@@ -250,152 +256,74 @@ include 'header.php';
                         <option value="accountant">Бухгалтер</option>
                     </select>
                 </div>
-                
-                <div class="form-group">
-                    <label for="department">Отдел</label>
-                    <input type="text" id="department" name="department" class="form-control">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Отдел</label>
+                    <input type="text" name="department" id="department" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
                 </div>
-                
-                <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Отмена</button>
-                    <button type="submit" class="btn btn-primary" id="saveUserBtn">Сохранить</button>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" onclick="closeUserModalDirect()" class="btn btn-secondary">Отмена</button>
+                <button type="submit" class="btn btn-primary" id="userSubmitBtn">Добавить сотрудника</button>
+            </div>
+        </form>
     </div>
 </div>
 
-<style>
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
-}
-.modal-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-}
-.modal-content {
-    position: relative;
-    background: white;
-    border-radius: 8px;
-    margin: 50px auto;
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #e0e0e0;
-}
-.modal-header h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #333;
-}
-.btn-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #999;
-    padding: 0;
-    line-height: 1;
-}
-.btn-close:hover {
-    color: #333;
-}
-.modal-body {
-    padding: 20px;
-}
-.form-group {
-    margin-bottom: 15px;
-}
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: #333;
-}
-.form-group label span {
-    font-weight: normal;
-    font-size: 12px;
-    color: #999;
-}
-.form-control {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 14px;
-    box-sizing: border-box;
-}
-.form-control:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-.form-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-}
-</style>
-
 <script>
+// Глобальный массив пользователей для использования в модальных окнах
+const usersData = <?php echo json_encode($users_list); ?>;
+
 // Открытие модального окна для добавления сотрудника
 function openAddUserModal() {
-    document.getElementById('modalTitle').textContent = 'Добавить сотрудника';
-    document.getElementById('userForm').reset();
+    document.getElementById('userModalTitle').textContent = 'Добавить сотрудника';
     document.getElementById('userId').value = '';
+    document.getElementById('fullName').value = '';
+    document.getElementById('login').value = '';
+    document.getElementById('password').value = '';
     document.getElementById('password').required = true;
-    document.getElementById('passwordHint').style.display = 'none';
-    document.getElementById('userModal').style.display = 'block';
+    document.getElementById('passwordHint').style.display = 'inline';
+    document.getElementById('role').value = '';
+    document.getElementById('department').value = '';
+    document.getElementById('userSubmitBtn').textContent = 'Добавить сотрудника';
+    
+    const modal = document.getElementById('userModal');
+    modal.style.display = 'flex';
 }
 
 // Открытие модального окна для редактирования сотрудника
 function openEditUserModal(userId, fullName, login, role, department) {
-    document.getElementById('modalTitle').textContent = 'Редактировать сотрудника';
+    document.getElementById('userModalTitle').textContent = 'Редактировать сотрудника';
     document.getElementById('userId').value = userId;
-    document.getElementById('full_name').value = fullName;
+    document.getElementById('fullName').value = fullName;
     document.getElementById('login').value = login;
-    document.getElementById('role').value = role;
-    document.getElementById('department').value = department;
     document.getElementById('password').value = '';
     document.getElementById('password').required = false;
     document.getElementById('passwordHint').style.display = 'inline';
-    document.getElementById('userModal').style.display = 'block';
+    document.getElementById('role').value = role;
+    document.getElementById('department').value = department;
+    document.getElementById('userSubmitBtn').textContent = 'Сохранить изменения';
+    
+    const modal = document.getElementById('userModal');
+    modal.style.display = 'flex';
 }
 
 // Закрытие модального окна
-function closeUserModal() {
-    document.getElementById('userModal').style.display = 'none';
-    document.getElementById('userForm').reset();
+function closeUserModal(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+        closeUserModalDirect();
+    }
 }
 
-// Закрытие по клику на overlay
-document.querySelector('.modal-overlay').addEventListener('click', function() {
-    closeUserModal();
-});
+function closeUserModalDirect() {
+    document.getElementById('userModal').style.display = 'none';
+}
 
-// Обработка отправки формы
-document.getElementById('userForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+// Отправка формы пользователя
+function submitUserForm(event) {
+    event.preventDefault();
     
-    const formData = new FormData(this);
-    const userId = document.getElementById('userId').value;
-    const isEdit = userId !== '';
-    
+    const formData = new FormData(document.getElementById('userForm'));
+    const isEdit = formData.get('id') !== '';
     const url = isEdit ? 'api/update_user.php' : 'api/create_user.php';
     
     fetch(url, {
@@ -406,16 +334,43 @@ document.getElementById('userForm').addEventListener('submit', function(e) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            closeUserModal();
+            closeUserModalDirect();
             location.reload();
         } else {
             alert('Ошибка: ' + data.message);
         }
     })
     .catch(error => {
-        alert('Ошибка соединения: ' + error);
+        alert('Ошибка соединения: ' + error.message);
     });
-});
+}
+
+// Добавляем стили для модальных окон
+const modalStyles = document.createElement('style');
+modalStyles.textContent = `
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .modal-content {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+`;
+document.head.appendChild(modalStyles);
 </script>
 
 <?php include 'footer.php'; ?>
