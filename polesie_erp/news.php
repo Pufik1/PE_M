@@ -43,7 +43,7 @@ include 'header.php';
     <div class="card-header">
         <div class="card-title">Последние события</div>
         <?php if (checkRole(['admin', 'director'])): ?>
-        <button class="btn btn-primary" onclick="alert('Функция добавления новости будет доступна в следующей версии')">
+        <button class="btn btn-primary" onclick="openAddNewsModal()">
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -101,5 +101,91 @@ include 'header.php';
 <?php endif; ?>
 
 <?php endif; ?>
+
+<!-- Add News Modal -->
+<div id="addNewsModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeAddNewsModal()"></div>
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Добавить новость</div>
+                <button class="btn-close" onclick="closeAddNewsModal()">×</button>
+            </div>
+            <div class="card-body">
+                <form id="addNewsForm" onsubmit="submitNews(event)">
+                    <div class="form-group">
+                        <label class="form-label">Заголовок *</label>
+                        <input type="text" name="title" class="form-control" required minlength="5" maxlength="200" placeholder="Введите заголовок новости">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Дата публикации</label>
+                        <input type="date" name="date_published" class="form-control" value="<?php echo date('Y-m-d'); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Содержание</label>
+                        <textarea name="content" class="form-control" rows="6" placeholder="Введите текст новости"></textarea>
+                    </div>
+                    
+                    <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeAddNewsModal()">Отмена</button>
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Опубликовать
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAddNewsModal() {
+    document.getElementById('addNewsModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAddNewsModal() {
+    document.getElementById('addNewsModal').style.display = 'none';
+    document.body.style.overflow = '';
+    document.getElementById('addNewsForm').reset();
+}
+
+function submitNews(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    fetch('api/create_news.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            closeAddNewsModal();
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Ошибка сети: ' + error);
+    });
+}
+
+// Закрытие модального окна по ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAddNewsModal();
+    }
+});
+</script>
 
 <?php include 'footer.php'; ?>
