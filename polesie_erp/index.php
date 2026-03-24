@@ -26,17 +26,18 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'] ?? '';
+    $login = $_POST['username'] ?? ''; // Имя поля в форме остается 'username'
     $password = $_POST['password'] ?? '';
     
     try {
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
-        $stmt->execute([$username, $password]);
+        // В базе данных поле называется 'login', поэтому используем его в запросе
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE login = ? AND password = ?");
+        $stmt->execute([$login, $password]);
         $user = $stmt->fetch();
         
         if ($user) {
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
+            $_SESSION['login'] = $user['login'];
             $_SESSION['full_name'] = $user['full_name'];
             $_SESSION['role'] = $user['role'];
             header('Location: dashboard.php');
