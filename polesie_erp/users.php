@@ -356,6 +356,29 @@ function submitUserForm(event) {
     });
 }
 
+// Удаление сотрудника
+function deleteUser(userId) {
+    if (!confirm('Вы уверены, что хотите удалить этого сотрудника?')) {
+        return;
+    }
+    
+    fetch(`api/delete_user.php?id=${userId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Ошибка соединения: ' + error.message);
+    });
+}
+
 // Добавляем стили для модальных окон
 const modalStyles = document.createElement('style');
 modalStyles.textContent = `
