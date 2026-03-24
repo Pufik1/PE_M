@@ -81,6 +81,10 @@ if (!isset($active_page)) $active_page = 'dashboard';
             font-weight: 700; font-size: 15px; color: white;
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
+        .logo-icon svg {
+            width: 28px; height: 28px;
+            color: white;
+        }
         .logo-text { font-size: 13px; font-weight: 600; line-height: 1.4; letter-spacing: 0.3px; }
         
         .nav-menu { padding: 8px 0; flex: 1; }
@@ -139,6 +143,10 @@ if (!isset($active_page)) $active_page = 'dashboard';
             border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
             font-weight: 600; font-size: 14px; color: white;
+        }
+        .user-avatar svg {
+            width: 22px; height: 22px;
+            color: white;
         }
         .user-info { text-align: right; }
         .user-name { 
@@ -384,7 +392,11 @@ if (!isset($active_page)) $active_page = 'dashboard';
     <aside class="sidebar">
         <div class="sidebar-header">
             <a href="dashboard.php" class="logo">
-                <div class="logo-icon">ПЭ</div>
+                <div class="logo-icon">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
                 <div class="logo-text">ОАО<br>Полесьеэлектромаш</div>
             </a>
         </div>
@@ -458,7 +470,11 @@ if (!isset($active_page)) $active_page = 'dashboard';
         <header class="top-bar">
             <h1 class="page-title"><?= htmlspecialchars($page_title) ?></h1>
             <div class="user-menu">
-                <div class="user-avatar"><?= mb_substr(getUserName(), 0, 1) ?></div>
+                <div class="user-avatar">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
                 <div class="user-info">
                     <div class="user-name"><?= htmlspecialchars(getUserName()) ?></div>
                     <div class="user-role"><?= getUserRole() ?></div>
