@@ -416,8 +416,22 @@ function applyFilters() {
 }
 
 function exportReport() {
-    alert('Функция экспорта будет доступна в следующей версии');
-    // Здесь можно реализовать экспорт в CSV/XLSX
+    const dateFrom = document.querySelector('input[type="date"]:nth-of-type(1)').value;
+    const dateTo = document.querySelector('input[type="date"]:nth-of-type(2)').value;
+    const reportType = document.querySelector('.form-select').value;
+    
+    // Открываем PDF версию отчета в новой вкладке
+    const url = `export_pdf.php?date_from=${encodeURIComponent(dateFrom)}&date_to=${encodeURIComponent(dateTo)}&report_type=${encodeURIComponent(reportType)}`;
+    const newWindow = window.open(url, '_blank');
+    
+    if (newWindow) {
+        // После загрузки страницы вызываем печать
+        newWindow.onload = function() {
+            setTimeout(function() {
+                newWindow.print();
+            }, 500);
+        };
+    }
 }
 </script>
 
