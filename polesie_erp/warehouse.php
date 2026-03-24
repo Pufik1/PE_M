@@ -238,7 +238,7 @@ include 'header.php';
     <div class="card" style="grid-column: span 2;">
         <div class="card-header">
             <h3>Товары на складе</h3>
-            <button class="btn btn-sm" onclick="alert('Функция добавления товара')">
+            <button class="btn btn-sm" onclick="openAddProductModal()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -368,9 +368,287 @@ include 'header.php';
 </div>
 
 <script>
+// Категории товаров
+const categories = {
+    'motor_async': 'Асинхронные двигатели',
+    'motor_single': 'Однофазные двигатели',
+    'motor_special': 'Спец. двигатели',
+    'pump': 'Насосы',
+    'heater': 'Электроконфорки',
+    'casting': 'Литье'
+};
+
+// Открытие модального окна добавления товара
+function openAddProductModal() {
+    const modalHtml = `
+        <div id="productModal" class="modal-overlay" onclick="closeProductModal(event)">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="card-header" style="border-bottom: 1px solid var(--border); padding: 20px 24px;">
+                    <h3 style="margin: 0;">Добавить товар</h3>
+                    <button onclick="closeProductModalDirect()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
+                </div>
+                <form id="addProductForm" onsubmit="submitAddProduct(event)" style="padding: 24px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Артикул *</label>
+                            <input type="text" name="article" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Категория *</label>
+                            <select name="category" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                                <option value="">Выберите категорию</option>
+                                ${Object.entries(categories).map(([key, value]) => `<option value="${key}">${value}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Наименование *</label>
+                        <input type="text" name="name" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Мощность (кВт)</label>
+                            <input type="number" step="0.01" name="power_kw" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Напряжение</label>
+                            <input type="text" name="voltage" placeholder="220/380В" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Цена (BYN) *</label>
+                            <input type="number" step="0.01" min="0" name="price_byn" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Количество (шт) *</label>
+                            <input type="number" min="0" name="stock_quantity" required value="0" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 24px;">
+                        <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Описание</label>
+                        <textarea name="description" rows="3" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button type="button" onclick="closeProductModalDirect()" class="btn btn-secondary">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Добавить товар</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    // Добавляем стили для модального окна если их еще нет
+    if (!document.getElementById('productModalStyles')) {
+        const styles = document.createElement('style');
+        styles.id = 'productModalStyles';
+        styles.textContent = `
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+            .modal-content {
+                background: var(--bg-secondary);
+                border-radius: 12px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// Закрытие модального окна
+function closeProductModal(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+        closeProductModalDirect();
+    }
+}
+
+function closeProductModalDirect() {
+    const modal = document.getElementById('productModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Отправка формы добавления товара
+function submitAddProduct(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    fetch('api/create_product.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            closeProductModalDirect();
+            location.reload(); // Перезагружаем страницу для обновления данных
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Ошибка сети: ' + error.message);
+    });
+}
+
+// Редактирование товара
 function editProduct(id) {
-    alert('Редактирование товара ID: ' + id);
-    // Здесь будет логика открытия модального окна
+    // Получаем данные о товаре через AJAX
+    fetch(`api/get_product.php?id=${id}`)
+        .then(response => response.json())
+        .then(product => {
+            if (!product.success) {
+                alert('Ошибка: ' + product.message);
+                return;
+            }
+            openEditProductModal(product.data);
+        })
+        .catch(error => {
+            alert('Ошибка сети: ' + error.message);
+        });
+}
+
+// Открытие модального окна редактирования
+function openEditProductModal(product) {
+    const modalHtml = `
+        <div id="productModal" class="modal-overlay" onclick="closeProductModal(event)">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="card-header" style="border-bottom: 1px solid var(--border); padding: 20px 24px;">
+                    <h3 style="margin: 0;">Редактировать товар</h3>
+                    <button onclick="closeProductModalDirect()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
+                </div>
+                <form id="editProductForm" onsubmit="submitEditProduct(event)" style="padding: 24px;">
+                    <input type="hidden" name="id" value="${product.id}">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Артикул *</label>
+                            <input type="text" name="article" required value="${escapeHtml(product.article)}" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Категория *</label>
+                            <select name="category" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                                <option value="">Выберите категорию</option>
+                                ${Object.entries(categories).map(([key, value]) => `<option value="${key}" ${product.category === key ? 'selected' : ''}>${value}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Наименование *</label>
+                        <input type="text" name="name" required value="${escapeHtml(product.name)}" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Мощность (кВт)</label>
+                            <input type="number" step="0.01" name="power_kw" value="${product.power_kw || ''}" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Напряжение</label>
+                            <input type="text" name="voltage" value="${escapeHtml(product.voltage || '')}" placeholder="220/380В" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Цена (BYN) *</label>
+                            <input type="number" step="0.01" min="0" name="price_byn" required value="${product.price_byn}" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Количество (шт) *</label>
+                            <input type="number" min="0" name="stock_quantity" required value="${product.stock_quantity}" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 24px;">
+                        <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Описание</label>
+                        <textarea name="description" rows="3" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px; resize: vertical;">${escapeHtml(product.description || '')}</textarea>
+                    </div>
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button type="button" onclick="closeProductModalDirect()" class="btn btn-secondary">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    // Добавляем стили для модального окна если их еще нет
+    if (!document.getElementById('productModalStyles')) {
+        const styles = document.createElement('style');
+        styles.id = 'productModalStyles';
+        styles.textContent = `
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+            .modal-content {
+                background: var(--bg-secondary);
+                border-radius: 12px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// Отправка формы редактирования товара
+function submitEditProduct(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    fetch('api/update_product.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            closeProductModalDirect();
+            location.reload(); // Перезагружаем страницу для обновления данных
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Ошибка сети: ' + error.message);
+    });
+}
+
+// Функция экранирования HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function adjustStock(id) {
