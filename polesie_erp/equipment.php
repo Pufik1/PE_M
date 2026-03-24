@@ -116,7 +116,7 @@ include 'header.php';
     <div class="card-header">
         <div class="card-title">Реестр оборудования</div>
         <?php if (checkRole(['admin', 'director', 'engineer'])): ?>
-        <button class="btn btn-primary" onclick="alert('Функция добавления будет доступна в следующей версии')">
+        <button class="btn btn-primary" onclick="addEquipment()">
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -141,6 +141,9 @@ include 'header.php';
                     <th>Местоположение</th>
                     <th>Статус</th>
                     <th>Последнее ТО</th>
+                    <?php if (checkRole(['admin', 'director', 'engineer'])): ?>
+                    <th style="width: 100px;">Действия</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -166,6 +169,21 @@ include 'header.php';
                             <span style="color: var(--text-muted);">Не проводилось</span>
                         <?php endif; ?>
                     </td>
+                    <?php if (checkRole(['admin', 'director', 'engineer'])): ?>
+                    <td style="width: 100px;">
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="editEquipment(<?= $item['id'] ?>)" 
+                                    style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; cursor: pointer; transition: all 0.2s;"
+                                    title="Редактировать"
+                                    onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.transform='translateY(-1px)';"
+                                    onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.transform='translateY(0)';">
+                                <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                    <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -175,5 +193,156 @@ include 'header.php';
 </div>
 
 <?php endif; ?>
+
+<!-- Модальное окно для добавления/редактирования оборудования -->
+<div id="equipmentModal" class="modal-overlay" style="display: none;" onclick="closeEquipmentModal(event)">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="card-header" style="border-bottom: 1px solid var(--border); padding: 20px 24px;">
+            <h3 id="equipmentModalTitle" style="margin: 0;">Добавить оборудование</h3>
+            <button onclick="closeEquipmentModalDirect()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <form id="equipmentForm" onsubmit="submitEquipmentForm(event)" style="padding: 24px;">
+            <input type="hidden" name="id" id="equipmentId">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div style="grid-column: 1 / -1;">
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Наименование *</label>
+                    <input type="text" name="name" id="equipmentName" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Инвентарный №</label>
+                    <input type="text" name="inventory_number" id="equipmentInventoryNumber" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Статус *</label>
+                    <select name="status" id="equipmentStatus" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        <option value="active">В работе</option>
+                        <option value="repair">В ремонте</option>
+                        <option value="decommissioned">Списано</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Местоположение</label>
+                <input type="text" name="location" id="equipmentLocation" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+            </div>
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Последнее ТО</label>
+                <input type="date" name="last_maintenance" id="equipmentLastMaintenance" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" onclick="closeEquipmentModalDirect()" class="btn btn-secondary">Отмена</button>
+                <button type="submit" class="btn btn-primary" id="equipmentSubmitBtn">Добавить оборудование</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Глобальный массив оборудования для использования в модальных окнах
+const equipmentData = <?php echo json_encode($equipment_list); ?>;
+
+// Открытие модального окна для добавления оборудования
+function addEquipment() {
+    document.getElementById('equipmentModalTitle').textContent = 'Добавить оборудование';
+    document.getElementById('equipmentId').value = '';
+    document.getElementById('equipmentName').value = '';
+    document.getElementById('equipmentInventoryNumber').value = '';
+    document.getElementById('equipmentLocation').value = '';
+    document.getElementById('equipmentStatus').value = 'active';
+    document.getElementById('equipmentLastMaintenance').value = '';
+    document.getElementById('equipmentSubmitBtn').textContent = 'Добавить оборудование';
+    
+    const modal = document.getElementById('equipmentModal');
+    modal.style.display = 'flex';
+}
+
+// Открытие модального окна для редактирования оборудования
+function editEquipment(id) {
+    const equipment = equipmentData.find(e => e.id == id);
+    if (!equipment) {
+        alert('Оборудование не найдено');
+        return;
+    }
+    
+    document.getElementById('equipmentModalTitle').textContent = 'Редактировать оборудование';
+    document.getElementById('equipmentId').value = equipment.id;
+    document.getElementById('equipmentName').value = equipment.name;
+    document.getElementById('equipmentInventoryNumber').value = equipment.inventory_number || '';
+    document.getElementById('equipmentLocation').value = equipment.location || '';
+    document.getElementById('equipmentStatus').value = equipment.status;
+    document.getElementById('equipmentLastMaintenance').value = equipment.last_maintenance || '';
+    document.getElementById('equipmentSubmitBtn').textContent = 'Сохранить изменения';
+    
+    const modal = document.getElementById('equipmentModal');
+    modal.style.display = 'flex';
+}
+
+// Закрытие модального окна оборудования
+function closeEquipmentModal(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+        closeEquipmentModalDirect();
+    }
+}
+
+function closeEquipmentModalDirect() {
+    document.getElementById('equipmentModal').style.display = 'none';
+}
+
+// Отправка формы оборудования
+function submitEquipmentForm(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(document.getElementById('equipmentForm'));
+    const isEdit = formData.get('id') !== '';
+    const url = isEdit ? 'api/update_equipment.php' : 'api/create_equipment.php';
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            closeEquipmentModalDirect();
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Ошибка соединения: ' + error.message);
+    });
+}
+
+// Добавляем стили для модальных окон
+const modalStyles = document.createElement('style');
+modalStyles.textContent = `
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .modal-content {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-height: 90vh;
+        overflow-y: auto;
+        width: 100%;
+        max-width: 600px;
+    }
+`;
+document.head.appendChild(modalStyles);
+</script>
 
 <?php include 'footer.php'; ?>
