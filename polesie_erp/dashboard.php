@@ -1,11 +1,17 @@
 <?php
-/**
- * Панель управления (Dashboard)
- * ОАО "Полесьеэлектромаш"
- */
 
 require_once 'config.php';
-checkAuth();
+
+// Включаем отображение ошибок для отладки
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+// Проверяем, авторизован ли пользователь
+if (!isset($_SESSION['user_id'])) {
+    // Если не авторизован - перенаправляем на страницу входа
+    header('Location: index.php');
+    exit;
+}
 
 $page_title = 'Главная панель';
 $active_page = 'dashboard';
@@ -17,38 +23,47 @@ $tasks_in_progress = 0;
 $month_revenue = 0;
 $recent_orders = [];
 $error = null;
+$debug_info = [];
 
 // Получение статистики
 try {
+    $debug_info[] = "Подключение к БД успешно";
+    
     // Всего продукции
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM products");
-    $products_count = $stmt->fetch()['count'] ?? 0;
+    $products_count = (int)$stmt->fetch()['count'];
+    $debug_info[] = "products_count: " . $products_count;
     
     // Активные заказы
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM orders WHERE status IN ('new', 'processing')");
-    $active_orders = $stmt->fetch()['count'] ?? 0;
+    $active_orders = (int)$stmt->fetch()['count'];
+    $debug_info[] = "active_orders: " . $active_orders;
     
     // Производственные задания в работе
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM production_tasks WHERE status = 'in_progress'");
-    $tasks_in_progress = $stmt->fetch()['count'] ?? 0;
+    $tasks_in_progress = (int)$stmt->fetch()['count'];
+    $debug_info[] = "tasks_in_progress: " . $tasks_in_progress;
     
     // Общая сумма заказов за месяц
-    $stmt = $pdo->query("SELECT SUM(total_amount_byn) as total FROM orders WHERE DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)");
+    $stmt = $pdo->query("SELECT COALESCE(SUM(total_amount_byn), 0) as total FROM orders WHERE DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)");
     $result = $stmt->fetch();
-    $month_revenue = $result['total'] ?? 0;
+    $month_revenue = (float)($result['total'] ?? 0);
+    $debug_info[] = "month_revenue: " . $month_revenue;
     
     // Последние заказы
     $stmt = $pdo->query("
-        SELECT o.*, p.name as partner_name 
+        SELECT o.id, o.order_number, o.partner_id, o.status, o.total_amount_byn, o.created_at, p.name as partner_name 
         FROM orders o 
         LEFT JOIN partners p ON o.partner_id = p.id 
         ORDER BY o.created_at DESC 
         LIMIT 5
     ");
-    $recent_orders = $stmt->fetchAll() ?: [];
+    $recent_orders = $stmt->fetchAll();
+    $debug_info[] = "recent_orders count: " . count($recent_orders);
     
 } catch (PDOException $e) {
     $error = "Ошибка загрузки данных: " . $e->getMessage();
+    $debug_info[] = "Error: " . $e->getMessage();
 }
 
 include 'header.php';
@@ -68,6 +83,26 @@ include 'header.php';
         </p>
     </div>
 </div>
+
+<!-- Debug Info -->
+<?php if (!empty($debug_info)): ?>
+<div class="content">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">Отладочная информация</div>
+        </div>
+        <div class="card-body">
+            <pre style="background: #1a1a2e; padding: 16px; border-radius: 8px; overflow-x: auto;">
+<?php foreach ($debug_info as $info): ?>
+<?= htmlspecialchars($info) ?>
+
+<?php endforeach; ?>
+            </pre>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <?php else: ?>
 
 <!-- Stats Grid -->
