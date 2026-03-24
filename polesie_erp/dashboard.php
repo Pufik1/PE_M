@@ -10,23 +10,32 @@ checkAuth();
 $page_title = 'Главная панель';
 $active_page = 'dashboard';
 
+// Инициализация переменных
+$products_count = 0;
+$active_orders = 0;
+$tasks_in_progress = 0;
+$month_revenue = 0;
+$recent_orders = [];
+$error = null;
+
 // Получение статистики
 try {
     // Всего продукции
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM products");
-    $products_count = $stmt->fetch()['count'];
+    $products_count = $stmt->fetch()['count'] ?? 0;
     
     // Активные заказы
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM orders WHERE status IN ('new', 'processing')");
-    $active_orders = $stmt->fetch()['count'];
+    $active_orders = $stmt->fetch()['count'] ?? 0;
     
     // Производственные задания в работе
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM production_tasks WHERE status = 'in_progress'");
-    $tasks_in_progress = $stmt->fetch()['count'];
+    $tasks_in_progress = $stmt->fetch()['count'] ?? 0;
     
     // Общая сумма заказов за месяц
-    $stmt = $pdo->query("SELECT SUM(total_byn) as total FROM orders WHERE DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)");
-    $month_revenue = $stmt->fetch()['total'] ?? 0;
+    $stmt = $pdo->query("SELECT SUM(total_amount_byn) as total FROM orders WHERE DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)");
+    $result = $stmt->fetch();
+    $month_revenue = $result['total'] ?? 0;
     
     // Последние заказы
     $stmt = $pdo->query("
@@ -36,7 +45,7 @@ try {
         ORDER BY o.created_at DESC 
         LIMIT 5
     ");
-    $recent_orders = $stmt->fetchAll();
+    $recent_orders = $stmt->fetchAll() ?: [];
     
 } catch (PDOException $e) {
     $error = "Ошибка загрузки данных: " . $e->getMessage();
@@ -44,6 +53,22 @@ try {
 
 include 'header.php';
 ?>
+
+<?php if ($error): ?>
+<div class="content">
+    <div class="empty-state" style="border-color: var(--danger);">
+        <div class="empty-state-icon" style="color: var(--danger);">⚠️</div>
+        <h3>Ошибка подключения к базе данных</h3>
+        <p><?= htmlspecialchars($error) ?></p>
+        <p style="margin-top: 16px; font-size: 13px;">
+            Убедитесь, что:<br>
+            1. База данных <code>polesie_erp</code> создана<br>
+            2. Таблицы созданы и заполнены данными<br>
+            3. Параметры подключения в config.php верны
+        </p>
+    </div>
+</div>
+<?php else: ?>
 
 <!-- Stats Grid -->
 <div class="stats-grid">
@@ -124,14 +149,15 @@ include 'header.php';
                     <tr>
                         <td>#<?= htmlspecialchars($order['id']) ?></td>
                         <td><?= htmlspecialchars($order['partner_name'] ?? 'Не указан') ?></td>
-                        <td><?= number_format($order['total_byn'], 2, ',', ' ') ?> BYN</td>
+                        <td><?= number_format($order['total_amount_byn'] ?? 0, 2, ',', ' ') ?> BYN</td>
                         <td>
                             <?php
                             $status_badges = [
                                 'new' => '<span class="badge badge-blue">Новый</span>',
                                 'processing' => '<span class="badge badge-yellow">В работе</span>',
-                                'completed' => '<span class="badge badge-green">Готов</span>',
+                                'ready' => '<span class="badge badge-green">Готов</span>',
                                 'shipped' => '<span class="badge badge-purple">Отгружен</span>',
+                                'closed' => '<span class="badge badge-green">Закрыт</span>',
                                 'cancelled' => '<span class="badge badge-red">Отменен</span>'
                             ];
                             echo $status_badges[$order['status']] ?? '<span class="badge badge-blue">Новый</span>';
@@ -179,5 +205,6 @@ include 'header.php';
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <?php include 'footer.php'; ?>
