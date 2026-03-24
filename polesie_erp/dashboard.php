@@ -7,6 +7,9 @@
 require_once 'config.php';
 checkAuth();
 
+$page_title = 'Главная панель';
+$active_page = 'dashboard';
+
 // Получение статистики
 try {
     // Всего продукции
@@ -21,6 +24,10 @@ try {
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM production_tasks WHERE status = 'in_progress'");
     $tasks_in_progress = $stmt->fetch()['count'];
     
+    // Общая сумма заказов за месяц
+    $stmt = $pdo->query("SELECT SUM(total_byn) as total FROM orders WHERE DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)");
+    $month_revenue = $stmt->fetch()['total'] ?? 0;
+    
     // Последние заказы
     $stmt = $pdo->query("
         SELECT o.*, p.name as partner_name 
@@ -31,544 +38,146 @@ try {
     ");
     $recent_orders = $stmt->fetchAll();
     
-    // Новости
-    $stmt = $pdo->query("
-        SELECT n.*, u.full_name as author_name 
-        FROM news n 
-        LEFT JOIN users u ON n.author_id = u.id 
-        ORDER BY n.date_published DESC 
-        LIMIT 3
-    ");
-    $news_items = $stmt->fetchAll();
-    
 } catch (PDOException $e) {
     $error = "Ошибка загрузки данных: " . $e->getMessage();
 }
+
+include 'header.php';
 ?>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления - <?= APP_NAME ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #667eea;
-            --primary-dark: #5a67d8;
-            --secondary: #764ba2;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #3b82f6;
-            --dark: #1a1a2e;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-500: #6b7280;
-            --gray-700: #374151;
-            --gray-900: #111827;
-        }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--gray-50);
-            color: var(--gray-900);
-        }
-
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 260px;
-            background: linear-gradient(180deg, var(--dark) 0%, #2d3748 100%);
-            padding: 24px 0;
-            z-index: 100;
-        }
-
-        .sidebar-header {
-            padding: 0 24px 24px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: white;
-            text-decoration: none;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
-        }
-
-        .logo-text {
-            font-size: 14px;
-            font-weight: 600;
-            line-height: 1.3;
-        }
-
-        .nav-menu {
-            padding: 16px 0;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 24px;
-            color: rgba(255,255,255,0.7);
-            text-decoration: none;
-            transition: all 0.2s;
-            font-size: 14px;
-        }
-
-        .nav-item:hover {
-            background: rgba(255,255,255,0.05);
-            color: white;
-        }
-
-        .nav-item.active {
-            background: rgba(102, 126, 234, 0.2);
-            color: white;
-            border-left: 3px solid var(--primary);
-        }
-
-        .nav-icon {
-            width: 20px;
-            height: 20px;
-            opacity: 0.7;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 260px;
-            min-height: 100vh;
-        }
-
-        /* Top Bar */
-        .top-bar {
-            background: white;
-            border-bottom: 1px solid var(--gray-200);
-            padding: 16px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .page-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--gray-900);
-        }
-
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .user-info {
-            text-align: right;
-        }
-
-        .user-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--gray-900);
-        }
-
-        .user-role {
-            font-size: 12px;
-            color: var(--gray-500);
-        }
-
-        .btn-logout {
-            padding: 8px 16px;
-            background: var(--gray-100);
-            color: var(--gray-700);
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .btn-logout:hover {
-            background: var(--gray-200);
-        }
-
-        /* Dashboard Content */
-        .dashboard-content {
-            padding: 32px;
-        }
-
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .stat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .stat-title {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--gray-500);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .stat-icon.blue { background: rgba(59, 130, 246, 0.1); color: var(--info); }
-        .stat-icon.green { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-        .stat-icon.orange { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
-        .stat-icon.purple { background: rgba(102, 126, 234, 0.1); color: var(--primary); }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: 4px;
-        }
-
-        .stat-change {
-            font-size: 13px;
-            color: var(--gray-500);
-        }
-
-        /* Content Grid */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 24px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .card-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--gray-200);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--gray-900);
-        }
-
-        .card-body {
-            padding: 24px;
-        }
-
-        /* Table */
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .table th {
-            text-align: left;
-            padding: 12px 16px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--gray-500);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--gray-200);
-        }
-
-        .table td {
-            padding: 16px;
-            font-size: 14px;
-            color: var(--gray-700);
-            border-bottom: 1px solid var(--gray-100);
-        }
-
-        .table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .badge-primary { background: rgba(59, 130, 246, 0.1); color: var(--info); }
-        .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
-        .badge-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-        .badge-secondary { background: var(--gray-100); color: var(--gray-700); }
-
-        /* News List */
-        .news-list {
-            list-style: none;
-        }
-
-        .news-item {
-            padding: 16px 0;
-            border-bottom: 1px solid var(--gray-100);
-        }
-
-        .news-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .news-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: 8px;
-        }
-
-        .news-meta {
-            font-size: 12px;
-            color: var(--gray-500);
-        }
-
-        /* Quick Actions */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .btn-action {
-            padding: 12px;
-            background: var(--gray-50);
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--gray-700);
-            text-decoration: none;
-            text-align: center;
-            transition: all 0.2s;
-        }
-
-        .btn-action:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-    </style>
-</head>
-<body>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <a href="dashboard.php" class="logo">
-                <div class="logo-icon">ПЭ</div>
-                <div class="logo-text">ОАО<br>Полесьеэлектромаш</div>
-            </a>
-        </div>
-
-        <nav class="nav-menu">
-            <a href="dashboard.php" class="nav-item active">
-                📊 Главная
-            </a>
-            <a href="products.php" class="nav-item">
-                🏭 Продукция
-            </a>
-            <a href="orders.php" class="nav-item">
-                📦 Заказы
-            </a>
-            <a href="partners.php" class="nav-item">
-                🤝 Контрагенты
-            </a>
-            <a href="production.php" class="nav-item">
-                ⚙️ Производство
-            </a>
-            <a href="warehouse.php" class="nav-item">
-                📦 Склад
-            </a>
-            <a href="materials.php" class="nav-item">
-                🔩 Материалы
-            </a>
-            <?php if (checkRole(['admin', 'director'])): ?>
-            <a href="users.php" class="nav-item">
-                👥 Сотрудники
-            </a>
-            <?php endif; ?>
-            <a href="reports.php" class="nav-item">
-                📈 Отчеты
-            </a>
-        </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Top Bar -->
-        <header class="top-bar">
-            <h1 class="page-title">Панель управления</h1>
-            <div class="user-menu">
-                <div class="user-info">
-                    <div class="user-name"><?= htmlspecialchars($_SESSION['user_name']) ?></div>
-                    <div class="user-role"><?= getRoleName($_SESSION['user_role']) ?></div>
-                </div>
-                <a href="logout.php" class="btn-logout">Выход</a>
-            </div>
-        </header>
-
-        <!-- Dashboard Content -->
-        <div class="dashboard-content">
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <div class="stat-title">Продукция</div>
-                        <div class="stat-icon blue">🏭</div>
-                    </div>
-                    <div class="stat-value"><?= $products_count ?></div>
-                    <div class="stat-change">наименований</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <div class="stat-title">Активные заказы</div>
-                        <div class="stat-icon green">📦</div>
-                    </div>
-                    <div class="stat-value"><?= $active_orders ?></div>
-                    <div class="stat-change">в работе</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <div class="stat-title">Производство</div>
-                        <div class="stat-icon orange">⚙️</div>
-                    </div>
-                    <div class="stat-value"><?= $tasks_in_progress ?></div>
-                    <div class="stat-change">заданий в работе</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <div class="stat-title">Месяц</div>
-                        <div class="stat-icon purple">📅</div>
-                    </div>
-                    <div class="stat-value"><?= date('F Y') ?></div>
-                    <div class="stat-change">текущий период</div>
-                </div>
-            </div>
-
-            <!-- Content Grid -->
-            <div class="content-grid">
-                <!-- Recent Orders -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Последние заказы</h2>
-                        <a href="orders.php" style="font-size: 13px; color: var(--primary); text-decoration: none;">Все заказы →</a>
-                    </div>
-                    <div class="card-body" style="padding: 0;">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>№ заказа</th>
-                                    <th>Клиент</th>
-                                    <th>Сумма</th>
-                                    <th>Статус</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($recent_orders as $order): 
-                                    $status_info = getOrderStatusName($order['status']);
-                                ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($order['order_number']) ?></td>
-                                    <td><?= htmlspecialchars($order['partner_name'] ?? '—') ?></td>
-                                    <td><?= formatPrice($order['total_amount_byn']) ?></td>
-                                    <td><span class="badge badge-<?= $status_info[1] ?>"><?= $status_info[0] ?></span></td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- News & Info -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Новости предприятия</h2>
-                    </div>
-                    <div class="card-body">
-                        <ul class="news-list">
-                            <?php foreach ($news_items as $news): ?>
-                            <li class="news-item">
-                                <div class="news-title"><?= htmlspecialchars($news['title']) ?></div>
-                                <div class="news-meta">
-                                    <?= date('d.m.Y', strtotime($news['date_published'])) ?> • 
-                                    <?= htmlspecialchars($news['author_name']) ?>
-                                </div>
-                            </li>
-                            <?php endforeach; ?>
-                        </ul>
-
-                        <div class="quick-actions">
-                            <a href="orders.php?action=new" class="btn-action">+ Новый заказ</a>
-                            <a href="products.php" class="btn-action">Каталог</a>
-                            <a href="production.php" class="btn-action">Задания</a>
-                            <a href="warehouse.php" class="btn-action">Склад</a>
-                        </div>
-                    </div>
-                </div>
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-title">Всего продукции</div>
+            <div class="stat-icon blue">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                </svg>
             </div>
         </div>
-    </main>
-</body>
-</html>
+        <div class="stat-value"><?= number_format($products_count) ?></div>
+        <div class="stat-change">единиц в каталоге</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-title">Активные заказы</div>
+            <div class="stat-icon green">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="stat-value"><?= number_format($active_orders) ?></div>
+        <div class="stat-change">в работе</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-title">Производство</div>
+            <div class="stat-icon orange">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="stat-value"><?= number_format($tasks_in_progress) ?></div>
+        <div class="stat-change">заданий в работе</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-title">Выручка за месяц</div>
+            <div class="stat-icon purple">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="stat-value"><?= number_format($month_revenue, 0, '.', ' ') ?> BYN</div>
+        <div class="stat-change">за последние 30 дней</div>
+    </div>
+</div>
+
+<!-- Content Grid -->
+<div class="grid-2">
+    <!-- Recent Orders -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">Последние заказы</div>
+            <a href="orders.php" class="btn btn-sm btn-secondary">Все заказы</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>№ заказа</th>
+                        <th>Клиент</th>
+                        <th>Сумма</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($recent_orders as $order): ?>
+                    <tr>
+                        <td>#<?= htmlspecialchars($order['id']) ?></td>
+                        <td><?= htmlspecialchars($order['partner_name'] ?? 'Не указан') ?></td>
+                        <td><?= number_format($order['total_byn'], 2, ',', ' ') ?> BYN</td>
+                        <td>
+                            <?php
+                            $status_badges = [
+                                'new' => '<span class="badge badge-blue">Новый</span>',
+                                'processing' => '<span class="badge badge-yellow">В работе</span>',
+                                'completed' => '<span class="badge badge-green">Готов</span>',
+                                'shipped' => '<span class="badge badge-purple">Отгружен</span>',
+                                'cancelled' => '<span class="badge badge-red">Отменен</span>'
+                            ];
+                            echo $status_badges[$order['status']] ?? '<span class="badge badge-blue">Новый</span>';
+                            ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">Быстрые действия</div>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                <a href="orders.php?action=new" class="btn" style="justify-content: center;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Новый заказ
+                </a>
+                <a href="products.php" class="btn btn-secondary" style="justify-content: center;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    Каталог
+                </a>
+                <a href="partners.php" class="btn btn-secondary" style="justify-content: center;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    Контрагенты
+                </a>
+                <a href="reports.php" class="btn btn-secondary" style="justify-content: center;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Отчеты
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php include 'footer.php'; ?>

@@ -1,59 +1,21 @@
 <?php
 /**
- * Каталог продукции
+ * Общий header для всех страниц
  * ОАО "Полесьеэлектромаш"
  */
 
-require_once 'config.php';
-checkAuth();
-
-// Фильтрация и поиск
-$category_filter = $_GET['category'] ?? '';
-$search = trim($_GET['search'] ?? '');
-
-$where_conditions = [];
-$params = [];
-
-if (!empty($category_filter)) {
-    $where_conditions[] = "category = ?";
-    $params[] = $category_filter;
-}
-
-if (!empty($search)) {
-    $where_conditions[] = "(name LIKE ? OR article LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-}
-
-$where_sql = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_conditions) : "";
-
-try {
-    $stmt = $pdo->prepare("SELECT * FROM products $where_sql ORDER BY category, name");
-    $stmt->execute($params);
-    $products = $stmt->fetchAll();
-    
-    // Категории для фильтра
-    $categories = [
-        'motor_async' => 'Асинхронные двигатели',
-        'motor_single' => 'Однофазные двигатели',
-        'motor_special' => 'Спец. двигатели',
-        'pump' => 'Насосы',
-        'heater' => 'Электроконфорки',
-        'casting' => 'Литье'
-    ];
-} catch (PDOException $e) {
-    $error = "Ошибка: " . $e->getMessage();
-}
+if (!isset($page_title)) $page_title = 'ERP система';
+if (!isset($active_page)) $active_page = 'dashboard';
 ?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Продукция - ОАО "Полесьеэлектромаш"</title>
+    <title><?= htmlspecialchars($page_title) ?> - ОАО "Полесьеэлектромаш"</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-primary: #0a0e17;
@@ -61,6 +23,7 @@ try {
             --bg-card: #1f2937;
             --bg-hover: #374151;
             --border-color: #374151;
+            --border-light: #4b5563;
             --text-primary: #f9fafb;
             --text-secondary: #9ca3af;
             --text-muted: #6b7280;
@@ -68,18 +31,30 @@ try {
             --primary-light: #60a5fa;
             --primary-dark: #2563eb;
             --success: #10b981;
+            --success-light: #34d399;
             --warning: #f59e0b;
+            --warning-light: #fbbf24;
             --danger: #ef4444;
+            --danger-light: #f87171;
             --info: #06b6d4;
+            --purple: #8b5cf6;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body { 
             font-family: 'Inter', sans-serif; 
             background: var(--bg-primary); 
             color: var(--text-primary);
             min-height: 100vh;
+            line-height: 1.5;
         }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
 
         /* Sidebar */
         .sidebar {
@@ -87,6 +62,7 @@ try {
             background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
             border-right: 1px solid var(--border-color);
             padding: 24px 0; z-index: 100;
+            display: flex; flex-direction: column;
         }
         .sidebar-header { 
             padding: 0 24px 24px; 
@@ -107,7 +83,15 @@ try {
         }
         .logo-text { font-size: 13px; font-weight: 600; line-height: 1.4; letter-spacing: 0.3px; }
         
-        .nav-menu { padding: 8px 0; }
+        .nav-menu { padding: 8px 0; flex: 1; }
+        .nav-section {
+            padding: 12px 24px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
         .nav-item {
             display: flex; align-items: center; gap: 12px; 
             padding: 12px 24px;
@@ -130,6 +114,7 @@ try {
         .nav-icon {
             width: 20px; height: 20px;
             display: flex; align-items: center; justify-content: center;
+            opacity: 0.8;
         }
 
         /* Main Content */
@@ -139,6 +124,7 @@ try {
             border-bottom: 1px solid var(--border-color);
             padding: 20px 32px; 
             display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 50;
         }
         .page-title { 
             font-size: 22px; 
@@ -147,6 +133,13 @@ try {
             letter-spacing: -0.5px;
         }
         .user-menu { display: flex; align-items: center; gap: 16px; }
+        .user-avatar {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 600; font-size: 14px; color: white;
+        }
         .user-info { text-align: right; }
         .user-name { 
             font-size: 14px; 
@@ -168,6 +161,7 @@ try {
             cursor: pointer; 
             text-decoration: none; 
             transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
         }
         .btn-logout:hover { 
             background: var(--bg-hover);
@@ -178,46 +172,94 @@ try {
         /* Content */
         .content { padding: 32px; }
 
-        /* Filters */
-        .filters {
-            background: var(--bg-secondary); 
-            border: 1px solid var(--border-color);
-            border-radius: 12px; 
-            padding: 20px 24px;
-            margin-bottom: 24px; 
-            display: flex; gap: 16px; align-items: end; flex-wrap: wrap;
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
         }
-
-        .filter-group { display: flex; flex-direction: column; gap: 6px; }
-        .filter-group label { 
-            font-size: 12px; 
-            font-weight: 500; 
-            color: var(--text-muted); 
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+        .stat-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px;
+        }
+        .stat-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
-        select, input[type="text"] {
-            padding: 10px 14px; 
-            background: var(--bg-card);
-            border: 1px solid var(--border-color); 
-            border-radius: 8px;
-            font-size: 14px; 
-            font-family: inherit; 
-            color: var(--text-primary);
-            outline: none; 
-            transition: all 0.2s;
-            min-width: 200px;
+        .stat-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
         }
-        select:focus, input[type="text"]:focus { 
-            border-color: var(--primary); 
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); 
-        }
-        select option {
-            background: var(--bg-card);
+        .stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: var(--primary-light); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .stat-icon.green { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .stat-icon.orange { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .stat-icon.purple { background: rgba(139, 92, 246, 0.15); color: var(--purple); border: 1px solid rgba(139, 92, 246, 0.3); }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
             color: var(--text-primary);
+            margin-bottom: 4px;
+            letter-spacing: -1px;
+        }
+        .stat-change {
+            font-size: 13px;
+            color: var(--text-muted);
         }
 
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .card-body { padding: 24px; }
+
+        /* Tables */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--bg-card);
+        }
+        td { font-size: 14px; color: var(--text-secondary); }
+        tr:hover td { background: var(--bg-hover); color: var(--text-primary); }
+        tr:last-child td { border-bottom: none; }
+
+        /* Buttons */
         .btn {
             padding: 10px 20px; 
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
@@ -229,7 +271,7 @@ try {
             cursor: pointer;
             text-decoration: none; 
             transition: all 0.2s; 
-            display: inline-block;
+            display: inline-flex; align-items: center; gap: 8px;
             box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
         }
         .btn:hover { 
@@ -247,103 +289,94 @@ try {
             color: var(--text-primary);
             border-color: var(--text-muted);
         }
+        .btn-sm { padding: 6px 12px; font-size: 13px; }
 
-        /* Products Grid */
-        .products-grid {
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
-            gap: 20px;
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid;
         }
+        .badge-blue { background: rgba(59, 130, 246, 0.15); color: var(--primary-light); border-color: rgba(59, 130, 246, 0.3); }
+        .badge-green { background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
+        .badge-yellow { background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.3); }
+        .badge-red { background: rgba(239, 68, 68, 0.15); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+        .badge-purple { background: rgba(139, 92, 246, 0.15); color: var(--purple); border-color: rgba(139, 92, 246, 0.3); }
 
-        .product-card {
-            background: var(--bg-secondary); 
-            border: 1px solid var(--border-color);
-            border-radius: 12px; 
-            overflow: hidden;
-            transition: all 0.3s;
-        }
-        .product-card:hover { 
-            transform: translateY(-4px); 
-            border-color: var(--primary);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-        }
-
-        .product-header {
-            padding: 16px 20px; 
-            border-bottom: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--bg-card);
-        }
-        .product-article { 
-            font-size: 12px; 
-            font-weight: 600; 
-            color: var(--text-muted); 
+        /* Forms */
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .product-category {
-            font-size: 11px; 
-            padding: 4px 12px; 
-            border-radius: 9999px;
-            background: rgba(59, 130, 246, 0.15); 
-            color: var(--primary-light); 
-            font-weight: 600;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-
-        .product-body { padding: 20px; }
-        .product-name { 
-            font-size: 16px; 
-            font-weight: 600; 
-            color: var(--text-primary); 
-            margin-bottom: 12px;
-            line-height: 1.4;
-        }
-        .product-specs { 
-            font-size: 13px; 
-            color: var(--text-secondary); 
-            margin-bottom: 16px; 
-            line-height: 1.8; 
-        }
-        .product-specs strong { color: var(--text-primary); }
-
-        .product-footer {
-            padding: 16px 20px; 
-            border-top: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 14px;
             background: var(--bg-card);
-        }
-        .product-price { 
-            font-size: 20px; 
-            font-weight: 700; 
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
             color: var(--text-primary);
-            letter-spacing: -0.5px;
+            outline: none;
+            transition: all 0.2s;
         }
-        .product-stock { 
-            font-size: 13px; 
-            color: var(--text-muted); 
+        .form-input:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
-        .stock-ok { color: var(--success); }
-        .stock-low { color: var(--warning); }
+        .form-select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        /* Filters */
+        .filters {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex; gap: 16px; align-items: end; flex-wrap: wrap;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 6px; }
 
         /* Empty State */
         .empty-state {
-            text-align: center; 
-            padding: 80px 20px; 
+            text-align: center;
+            padding: 80px 20px;
             color: var(--text-muted);
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 12px;
         }
         .empty-state-icon {
-            font-size: 56px; 
+            font-size: 56px;
             margin-bottom: 16px;
             opacity: 0.5;
         }
 
-        /* Responsive */
+        /* Grid layouts */
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+        @media (max-width: 1024px) {
+            .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
             .main-content { margin-left: 0; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -356,58 +389,63 @@ try {
             </a>
         </div>
         <nav class="nav-menu">
-            <a href="dashboard.php" class="nav-item">
+            <div class="nav-section">Основное</div>
+            <a href="dashboard.php" class="nav-item <?= $active_page === 'dashboard' ? 'active' : '' ?>">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                 </svg>
                 Главная
             </a>
-            <a href="products.php" class="nav-item active">
+            <a href="products.php" class="nav-item <?= $active_page === 'products' ? 'active' : '' ?>">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
                 </svg>
                 Продукция
             </a>
-            <a href="orders.php" class="nav-item">
+            <a href="orders.php" class="nav-item <?= $active_page === 'orders' ? 'active' : '' ?>">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                 </svg>
                 Заказы
             </a>
-            <a href="partners.php" class="nav-item">
+            
+            <div class="nav-section">Бизнес</div>
+            <a href="partners.php" class="nav-item <?= $active_page === 'partners' ? 'active' : '' ?>">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
                 Контрагенты
             </a>
-            <a href="production.php" class="nav-item">
+            <a href="production.php" class="nav-item <?= $active_page === 'production' ? 'active' : '' ?>">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 Производство
             </a>
-            <a href="warehouse.php" class="nav-item">
+            <a href="warehouse.php" class="nav-item <?= $active_page === 'warehouse' ? 'active' : '' ?>">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
                 </svg>
                 Склад
             </a>
-            <a href="materials.php" class="nav-item">
+            <a href="materials.php" class="nav-item <?= $active_page === 'materials' ? 'active' : '' ?>">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                 </svg>
                 Материалы
             </a>
+            
             <?php if (checkRole(['admin', 'director'])): ?>
-            <a href="users.php" class="nav-item">
+            <div class="nav-section">Администрирование</div>
+            <a href="users.php" class="nav-item <?= $active_page === 'users' ? 'active' : '' ?>">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
                 Сотрудники
             </a>
             <?php endif; ?>
-            <a href="reports.php" class="nav-item">
+            <a href="reports.php" class="nav-item <?= $active_page === 'reports' ? 'active' : '' ?>">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v10a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
@@ -418,74 +456,19 @@ try {
 
     <main class="main-content">
         <header class="top-bar">
-            <h1 class="page-title">Каталог продукции</h1>
+            <h1 class="page-title"><?= htmlspecialchars($page_title) ?></h1>
             <div class="user-menu">
+                <div class="user-avatar"><?= mb_substr(getUserName(), 0, 1) ?></div>
                 <div class="user-info">
                     <div class="user-name"><?= htmlspecialchars(getUserName()) ?></div>
                     <div class="user-role"><?= getUserRole() ?></div>
                 </div>
-                <a href="logout.php" class="btn-logout">Выход</a>
+                <a href="logout.php" class="btn-logout">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    Выход
+                </a>
             </div>
         </header>
-
         <div class="content">
-            <div class="filters">
-                <form method="GET" style="display: flex; gap: 16px; align-items: end; flex-wrap: wrap;">
-                    <div class="filter-group">
-                        <label>Категория</label>
-                        <select name="category">
-                            <option value="">Все категории</option>
-                            <?php foreach ($categories as $key => $name): ?>
-                            <option value="<?= $key ?>" <?= $category_filter === $key ? 'selected' : '' ?>><?= $name ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Поиск</label>
-                        <input type="text" name="search" placeholder="Название или артикул" value="<?= htmlspecialchars($search) ?>">
-                    </div>
-                    <button type="submit" class="btn">Фильтр</button>
-                    <a href="products.php" class="btn btn-secondary">Сброс</a>
-                </form>
-            </div>
-
-            <div class="products-grid">
-                <?php foreach ($products as $product): ?>
-                <div class="product-card">
-                    <div class="product-header">
-                        <span class="product-article">Арт. <?= htmlspecialchars($product['article']) ?></span>
-                        <span class="product-category"><?= getCategoryName($product['category']) ?></span>
-                    </div>
-                    <div class="product-body">
-                        <div class="product-name"><?= htmlspecialchars($product['name']) ?></div>
-                        <div class="product-specs">
-                            <?php if ($product['power_kw']): ?>
-                            <div><strong>Мощность:</strong> <?= $product['power_kw'] ?> кВт</div>
-                            <?php endif; ?>
-                            <?php if ($product['voltage']): ?>
-                            <div><strong>Напряжение:</strong> <?= htmlspecialchars($product['voltage']) ?></div>
-                            <?php endif; ?>
-                            <div><strong>Описание:</strong> <?= htmlspecialchars($product['description']) ?></div>
-                        </div>
-                    </div>
-                    <div class="product-footer">
-                        <div class="product-price"><?= formatPrice($product['price_byn']) ?></div>
-                        <div class="product-stock <?= $product['stock_quantity'] < 20 ? 'stock-low' : 'stock-ok' ?>">
-                            На складе: <strong><?= $product['stock_quantity'] ?> шт.</strong>
-                        </div>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-
-            <?php if (empty($products)): ?>
-            <div class="empty-state">
-                <div class="empty-state-icon">🔍</div>
-                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Продукция не найдена</div>
-                <div style="color: var(--text-muted);">Попробуйте изменить параметры поиска</div>
-            </div>
-            <?php endif; ?>
-        </div>
-    </main>
-</body>
-</html>
