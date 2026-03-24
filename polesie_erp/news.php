@@ -69,6 +69,17 @@ include 'header.php';
                 <span class="badge badge-blue">
                     <?= date('d.m.Y', strtotime($news['date_published'])) ?>
                 </span>
+                <?php if (checkRole(['admin', 'director'])): ?>
+                <button onclick="deleteNews(<?= $news['id'] ?>)" 
+                        style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; cursor: pointer; transition: all 0.2s;"
+                        title="Удалить"
+                        onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'; this.style.transform='translateY(-1px)';"
+                        onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.transform='translateY(0)';">
+                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+                <?php endif; ?>
             </div>
             
             <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">
@@ -186,6 +197,29 @@ document.addEventListener('keydown', function(e) {
         closeAddNewsModal();
     }
 });
+
+// Удаление новости
+function deleteNews(id) {
+    if (!confirm('Вы уверены, что хотите удалить эту новость?')) {
+        return;
+    }
+    
+    fetch('api/delete_news.php?id=' + id, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Ошибка сети: ' + error);
+    });
+}
 </script>
 
 <?php include 'footer.php'; ?>

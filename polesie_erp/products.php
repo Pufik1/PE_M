@@ -129,16 +129,54 @@ include 'header.php';
                         <div style="font-size: 12px; color: var(--text-muted);">Цена</div>
                         <div style="font-size: 20px; font-weight: 700; color: var(--text-main);"><?php echo number_format($product['price_byn'], 2, ',', ' '); ?> BYN</div>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 12px; color: var(--text-muted);">На складе</div>
-                        <div style="font-size: 14px; font-weight: 600; color: <?php echo $product['stock_quantity'] > 10 ? 'var(--success)' : ($product['stock_quantity'] > 0 ? 'var(--warning)' : 'var(--danger)'); ?>">
-                            <?php echo $product['stock_quantity']; ?> шт.
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="text-align: right;">
+                            <div style="font-size: 12px; color: var(--text-muted);">На складе</div>
+                            <div style="font-size: 14px; font-weight: 600; color: <?php echo $product['stock_quantity'] > 10 ? 'var(--success)' : ($product['stock_quantity'] > 0 ? 'var(--warning)' : 'var(--danger)'); ?>">
+                                <?php echo $product['stock_quantity']; ?> шт.
+                            </div>
                         </div>
+                        <?php if (checkRole(['admin', 'director'])): ?>
+                        <button onclick="deleteProduct(<?php echo $product['id']; ?>)" 
+                                style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; cursor: pointer; transition: all 0.2s;"
+                                title="Удалить"
+                                onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'; this.style.transform='translateY(-1px)';"
+                                onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.transform='translateY(0)';">
+                            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         <?php endforeach; ?>
     </div>
 <?php endif; ?>
+
+<script>
+// Удаление продукции
+function deleteProduct(id) {
+    if (!confirm('Вы уверены, что хотите удалить эту продукцию?')) {
+        return;
+    }
+    
+    fetch('api/delete_product.php?id=' + id, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Ошибка сети: ' + error.message);
+    });
+}
+</script>
 
 <?php include 'footer.php'; ?>
