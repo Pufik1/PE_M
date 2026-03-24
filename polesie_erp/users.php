@@ -18,6 +18,7 @@ $page_titles = [
 
 $title = $page_titles[$page_name] ?? 'Страница';
 $active_page = $page_name;
+$page_title = $title;
 include 'header.php';
 ?>
 
