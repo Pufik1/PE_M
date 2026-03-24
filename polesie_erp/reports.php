@@ -416,40 +416,66 @@ function applyFilters() {
 }
 
 function exportReport() {
-    const dateFrom = document.querySelector('input[type="date"]:nth-of-type(1)').value;
-    const dateTo = document.querySelector('input[type="date"]:nth-of-type(2)').value;
-    const reportType = document.querySelector('.form-select').value;
-    
-    // Открываем PDF версию отчета в новой вкладке
-    const url = `export_pdf.php?date_from=${encodeURIComponent(dateFrom)}&date_to=${encodeURIComponent(dateTo)}&report_type=${encodeURIComponent(reportType)}`;
-    
-    // Создаем форму для открытия в новой вкладке (более надежно чем window.open)
-    const form = document.createElement('form');
-    form.action = 'export_pdf.php';
-    form.method = 'GET';
-    form.target = '_blank';
-    
-    const dateFromInput = document.createElement('input');
-    dateFromInput.type = 'hidden';
-    dateFromInput.name = 'date_from';
-    dateFromInput.value = dateFrom;
-    
-    const dateToInput = document.createElement('input');
-    dateToInput.type = 'hidden';
-    dateToInput.name = 'date_to';
-    dateToInput.value = dateTo;
-    
-    const reportTypeInput = document.createElement('input');
-    reportTypeInput.type = 'hidden';
-    reportTypeInput.name = 'report_type';
-    reportTypeInput.value = reportType;
-    
-    form.appendChild(dateFromInput);
-    form.appendChild(dateToInput);
-    form.appendChild(reportTypeInput);
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
+    try {
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        if (dateInputs.length < 2) {
+            alert('Ошибка: не найдены поля даты');
+            return;
+        }
+        
+        const dateFrom = dateInputs[0].value;
+        const dateTo = dateInputs[1].value;
+        const reportTypeSelect = document.querySelector('.form-select');
+        const reportType = reportTypeSelect ? reportTypeSelect.value : 'sales';
+        
+        if (!dateFrom || !dateTo) {
+            alert('Пожалуйста, выберите даты периода');
+            return;
+        }
+        
+        // Формируем URL с параметрами
+        const url = `export_pdf.php?date_from=${encodeURIComponent(dateFrom)}&date_to=${encodeURIComponent(dateTo)}&report_type=${encodeURIComponent(reportType)}`;
+        
+        // Открываем в новой вкладке напрямую
+        const newWindow = window.open(url, '_blank');
+        
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+            // Если браузер заблокировал всплывающее окно, используем форму
+            const form = document.createElement('form');
+            form.action = 'export_pdf.php';
+            form.method = 'GET';
+            form.target = '_blank';
+            
+            const dateFromInput = document.createElement('input');
+            dateFromInput.type = 'hidden';
+            dateFromInput.name = 'date_from';
+            dateFromInput.value = dateFrom;
+            
+            const dateToInput = document.createElement('input');
+            dateToInput.type = 'hidden';
+            dateToInput.name = 'date_to';
+            dateToInput.value = dateTo;
+            
+            const reportTypeInput = document.createElement('input');
+            reportTypeInput.type = 'hidden';
+            reportTypeInput.name = 'report_type';
+            reportTypeInput.value = reportType;
+            
+            form.appendChild(dateFromInput);
+            form.appendChild(dateToInput);
+            form.appendChild(reportTypeInput);
+            document.body.appendChild(form);
+            form.submit();
+            
+            // Удаляем форму через небольшую задержку
+            setTimeout(function() {
+                document.body.removeChild(form);
+            }, 1000);
+        }
+    } catch (e) {
+        console.error('Ошибка экспорта:', e);
+        alert('Произошла ошибка при экспорте: ' + e.message);
+    }
 }
 </script>
 
