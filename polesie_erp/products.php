@@ -125,12 +125,12 @@ include 'header.php';
                 <div style="padding: 20px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover);">
                     <div>
                         <div style="font-size: 12px; color: var(--text-muted);">Цена</div>
-                        <div style="font-size: 20px; font-weight: 700; color: var(--text-main);"><?php echo number_format($product['price'], 2, ',', ' '); ?> BYN</div>
+                        <div style="font-size: 20px; font-weight: 700; color: var(--text-main);"><?php echo number_format($product['price_byn'], 2, ',', ' '); ?> BYN</div>
                     </div>
                     <div style="text-align: right;">
                         <div style="font-size: 12px; color: var(--text-muted);">На складе</div>
-                        <div style="font-size: 14px; font-weight: 600; color: <?php echo $product['stock'] > 10 ? 'var(--success)' : ($product['stock'] > 0 ? 'var(--warning)' : 'var(--danger)'); ?>">
-                            <?php echo $product['stock']; ?> шт.
+                        <div style="font-size: 14px; font-weight: 600; color: <?php echo $product['stock_quantity'] > 10 ? 'var(--success)' : ($product['stock_quantity'] > 0 ? 'var(--warning)' : 'var(--danger)'); ?>">
+                            <?php echo $product['stock_quantity']; ?> шт.
                         </div>
                     </div>
                 </div>
