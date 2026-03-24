@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $task_number = trim($_POST['task_number']);
                 $product_id = (int)$_POST['product_id'];
                 $quantity_plan = (int)$_POST['quantity_plan'];
+                $quantity_fact = isset($_POST['quantity_fact']) ? (int)$_POST['quantity_fact'] : 0;
                 $workshop = $_POST['workshop'];
                 $deadline = $_POST['deadline'];
                 
@@ -31,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('Плановое количество должно быть больше 0');
                 }
                 
-                $stmt = $pdo->prepare("INSERT INTO production_tasks (task_number, product_id, quantity_plan, workshop, deadline, status) VALUES (?, ?, ?, ?, ?, 'planned')");
-                $stmt->execute([$task_number, $product_id, $quantity_plan, $workshop, $deadline]);
+                $stmt = $pdo->prepare("INSERT INTO production_tasks (task_number, product_id, quantity_plan, quantity_fact, workshop, deadline, status) VALUES (?, ?, ?, ?, ?, ?, 'planned')");
+                $stmt->execute([$task_number, $product_id, $quantity_plan, $quantity_fact, $workshop, $deadline]);
                 
                 $message = 'Производственное задание успешно добавлено';
                 $message_type = 'success';

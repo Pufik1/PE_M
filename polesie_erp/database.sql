@@ -166,10 +166,10 @@ INSERT INTO order_items (order_id, product_id, quantity, price_at_moment_byn) VA
 (1, 1, 100, 450.00);
 
 -- Производственные задания
-INSERT INTO production_tasks (task_number, product_id, quantity_plan, workshop, status, deadline) VALUES
-('TASK-24-050', 1, 200, 'Сборочный цех №1', 'in_progress', '2024-06-01'),
-('TASK-24-051', 6, 1000, 'Цех ТНП', 'planned', '2024-06-15'),
-('TASK-24-048', 9, 50, 'Спеццех', 'completed', '2024-05-10');
+INSERT INTO production_tasks (task_number, product_id, quantity_plan, quantity_fact, workshop, status, deadline) VALUES
+('TASK-24-050', 1, 200, 150, 'Сборочный цех №1', 'in_progress', '2024-06-01'),
+('TASK-24-051', 6, 1000, 0, 'Цех ТНП', 'planned', '2024-06-15'),
+('TASK-24-048', 9, 50, 50, 'Спеццех', 'completed', '2024-05-10');
 
 -- Материалы
 INSERT INTO materials (name, type, current_stock, min_stock_level, price_byn) VALUES
