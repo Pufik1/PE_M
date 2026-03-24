@@ -1,11 +1,33 @@
 <?php
 session_start();
 
+// Подключаем конфиг сразу для проверки БД
+try {
+    require_once 'config.php';
+} catch (PDOException $e) {
+    die("<div style='background:#ef4444;color:white;padding:20px;font-family:sans-serif;border-radius:8px;max-width:600px;margin:50px auto;'>
+        <h2>❌ Ошибка подключения к базе данных</h2>
+        <p><strong>Сообщение:</strong> " . htmlspecialchars($e->getMessage()) . "</p>
+        <hr style='border-color:rgba(255,255,255,0.3);margin:15px 0;'>
+        <p><strong>Возможные причины:</strong></p>
+        <ul>
+            <li>База данных <code>polesie_erp</code> не создана</li>
+            <li>Файл database.sql не импортирован в phpMyAdmin</li>
+            <li>Неверный логин/пароль MySQL (в config.php: root/root)</li>
+            <li>Сервер MySQL не запущен в MAMP</li>
+        </ul>
+        <p><strong>Решение:</strong></p>
+        <ol>
+            <li>Откройте MAMP и убедитесь, что серверы работают</li>
+            <li>Зайдите в phpMyAdmin (http://localhost/phpMyAdmin)</li>
+            <li>Создайте базу данных <code>polesie_erp</code> или импортируйте файл <code>database.sql</code></li>
+        </ol>
+    </div>");
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
-    
-    require_once 'config.php';
     
     try {
         $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
@@ -23,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Неверное имя пользователя или пароль";
         }
     } catch (PDOException $e) {
-        $error = "Ошибка подключения к базе данных";
+        $error = "Ошибка базы данных: " . $e->getMessage();
     }
 }
 ?>
