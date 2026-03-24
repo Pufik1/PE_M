@@ -422,16 +422,34 @@ function exportReport() {
     
     // Открываем PDF версию отчета в новой вкладке
     const url = `export_pdf.php?date_from=${encodeURIComponent(dateFrom)}&date_to=${encodeURIComponent(dateTo)}&report_type=${encodeURIComponent(reportType)}`;
-    const newWindow = window.open(url, '_blank');
     
-    if (newWindow) {
-        // После загрузки страницы вызываем печать
-        newWindow.onload = function() {
-            setTimeout(function() {
-                newWindow.print();
-            }, 500);
-        };
-    }
+    // Создаем форму для открытия в новой вкладке (более надежно чем window.open)
+    const form = document.createElement('form');
+    form.action = 'export_pdf.php';
+    form.method = 'GET';
+    form.target = '_blank';
+    
+    const dateFromInput = document.createElement('input');
+    dateFromInput.type = 'hidden';
+    dateFromInput.name = 'date_from';
+    dateFromInput.value = dateFrom;
+    
+    const dateToInput = document.createElement('input');
+    dateToInput.type = 'hidden';
+    dateToInput.name = 'date_to';
+    dateToInput.value = dateTo;
+    
+    const reportTypeInput = document.createElement('input');
+    reportTypeInput.type = 'hidden';
+    reportTypeInput.name = 'report_type';
+    reportTypeInput.value = reportType;
+    
+    form.appendChild(dateFromInput);
+    form.appendChild(dateToInput);
+    form.appendChild(reportTypeInput);
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
 }
 </script>
 

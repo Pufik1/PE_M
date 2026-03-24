@@ -2,22 +2,33 @@
 /**
  * Экспорт отчета в PDF
  * 
- * Этот скрипт генерирует PDF файл с данными отчета
+ * Этот скрипт генерирует HTML версию отчета для печати в PDF
  */
 
+// Старт сессии перед подключением config.php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once 'config.php';
-checkAuth();
 
-// Подключаем библиотеку Dompdf через автозагрузчик или CDN
-// Для работы требуется установка через composer: composer require dompdf/dompdf
-// Или можно использовать альтернативный подход с TCPDF
-
-header('Content-Type: text/html; charset=utf-8');
+// Проверка авторизации - если не авторизован, показываем ошибку
+if (!isset($_SESSION['user_id'])) {
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ошибка</title></head><body>';
+    echo '<h1>Ошибка доступа</h1><p>Необходимо авторизоваться для просмотра отчетов.</p>';
+    echo '<p><a href="index.php">Вернуться на страницу входа</a></p>';
+    echo '</body></html>';
+    exit;
+}
 
 // Параметры фильтра
 $date_from = $_GET['date_from'] ?? date('Y-m-d', strtotime('-30 days'));
 $date_to = $_GET['date_to'] ?? date('Y-m-d');
 $report_type = $_GET['report_type'] ?? 'sales';
+
+// Устанавливаем заголовок для HTML страницы (для печати в PDF через браузер)
+header('Content-Type: text/html; charset=utf-8');
 
 try {
     // Общая статистика заказов за период
@@ -376,5 +387,14 @@ $report_type_names = [
     <div class="footer">
         <div>Polesie ERP © <?= date('Y') ?> | Отчет сформирован автоматически</div>
     </div>
+    
+    <script>
+        // Автоматически вызываем диалог печати после загрузки страницы
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
 </body>
 </html>
