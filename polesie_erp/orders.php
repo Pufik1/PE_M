@@ -178,7 +178,7 @@ include 'header.php';
                                         <td><?php echo htmlspecialchars($order['manager_name'] ?? 'Не назначен'); ?></td>
                                         <td><?php echo date('d.m.Y', strtotime($order['created_at'])); ?></td>
                                         <td>
-                                            <div class="flex items-center justify-center space-x-2">
+                                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                                                 <button onclick="openEditModal(<?php echo htmlspecialchars($order['id']); ?>)" 
                                                         class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors duration-200 border border-blue-200 shadow-sm"
                                                         title="Редактировать">
