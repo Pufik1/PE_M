@@ -12,6 +12,11 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+// Устанавливаем user_role из session role если он есть (для обратной совместимости)
+if (isset($_SESSION['role']) && !isset($_SESSION['user_role'])) {
+    $_SESSION['user_role'] = $_SESSION['role'];
+}
+
 $page_title = 'Главная панель';
 $active_page = 'dashboard';
 
