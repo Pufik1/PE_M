@@ -65,11 +65,13 @@ if (!isset($active_page)) $active_page = 'dashboard';
             border-right: 1px solid var(--border-color);
             padding: 24px 0; z-index: 100;
             display: flex; flex-direction: column;
+            overflow: hidden;
         }
         .sidebar-header { 
             padding: 0 24px 24px; 
             border-bottom: 1px solid var(--border-color);
             margin-bottom: 16px;
+            flex-shrink: 0;
         }
         .logo { 
             display: flex; align-items: center; gap: 14px; 
@@ -89,7 +91,7 @@ if (!isset($active_page)) $active_page = 'dashboard';
         }
         .logo-text { font-size: 13px; font-weight: 600; line-height: 1.4; letter-spacing: 0.3px; }
         
-        .nav-menu { padding: 8px 0; flex: 1; }
+        .nav-menu { padding: 8px 0; flex: 1; overflow-y: auto; }
         .nav-section {
             padding: 12px 24px 8px;
             font-size: 11px;
