@@ -8,9 +8,12 @@ require_once 'config.php';
 checkAuth();
 
 // Получение данных
+$orders = [];
+$error = null;
+
 try {
     $stmt = $pdo->query("
-        SELECT o.*, p.name as partner_name, u.full_name as manager_name 
+        SELECT o.*, p.name as partner_name, u.name as manager_name 
         FROM orders o 
         LEFT JOIN partners p ON o.partner_id = p.id 
         LEFT JOIN users u ON o.user_id = u.id 
@@ -26,7 +29,7 @@ try {
     $stmt = $pdo->query("SELECT * FROM products ORDER BY name");
     $products_list = $stmt->fetchAll();
 } catch (PDOException $e) {
-    $error = "Ошибка: " . $e->getMessage();
+    $error = "Ошибка загрузки данных: " . $e->getMessage();
 }
 ?>
 <!DOCTYPE html>
@@ -124,6 +127,17 @@ try {
         .badge-secondary { background: var(--gray-100); color: var(--gray-700); }
         .badge-info { background: rgba(59, 130, 246, 0.1); color: var(--info); }
         
+        .alert-error {
+            padding: 16px 20px; background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid var(--danger); border-radius: 8px;
+            color: var(--danger); margin-bottom: 24px; font-size: 14px;
+        }
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--gray-500);
+        }
+        .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-state-text { font-size: 16px; }
+        
         .btn {
             padding: 10px 20px; background: var(--primary); color: white; border: none;
             border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer;
@@ -169,42 +183,53 @@ try {
         </header>
 
         <div class="content">
+            <?php if ($error): ?>
+                <div class="alert-error"><?= htmlspecialchars($error) ?></div>
+            <?php endif; ?>
+            
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Все заказы</h2>
                     <button class="btn" onclick="alert('Функция создания заказа в разработке')">+ Новый заказ</button>
                 </div>
                 <div class="table-container">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>№ заказа</th>
-                                <th>Дата</th>
-                                <th>Клиент</th>
-                                <th>Менеджер</th>
-                                <th>Сумма (BYN)</th>
-                                <th>Статус</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($orders as $order): 
-                                $status_info = getOrderStatusName($order['status']);
-                            ?>
-                            <tr>
-                                <td><strong><?= htmlspecialchars($order['order_number']) ?></strong></td>
-                                <td><?= date('d.m.Y H:i', strtotime($order['created_at'])) ?></td>
-                                <td><?= htmlspecialchars($order['partner_name'] ?? '—') ?></td>
-                                <td><?= htmlspecialchars($order['manager_name'] ?? '—') ?></td>
-                                <td><strong><?= formatPrice($order['total_amount_byn']) ?></strong></td>
-                                <td><span class="badge badge-<?= $status_info[1] ?>"><?= $status_info[0] ?></span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-secondary" onclick="alert('Просмотр заказа <?= htmlspecialchars($order['order_number']) ?>')">Просмотр</button>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                    <?php if (empty($orders)): ?>
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📦</div>
+                            <div class="empty-state-text">Заказы пока не созданы</div>
+                        </div>
+                    <?php else: ?>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>№ заказа</th>
+                                    <th>Дата</th>
+                                    <th>Клиент</th>
+                                    <th>Менеджер</th>
+                                    <th>Сумма (BYN)</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($orders as $order): 
+                                    $status_info = getOrderStatusName($order['status']);
+                                ?>
+                                <tr>
+                                    <td><strong><?= htmlspecialchars($order['order_number']) ?></strong></td>
+                                    <td><?= date('d.m.Y H:i', strtotime($order['created_at'])) ?></td>
+                                    <td><?= htmlspecialchars($order['partner_name'] ?? '—') ?></td>
+                                    <td><?= htmlspecialchars($order['manager_name'] ?? '—') ?></td>
+                                    <td><strong><?= formatPrice((float)($order['total_amount_byn'] ?? 0)) ?></strong></td>
+                                    <td><span class="badge badge-<?= $status_info[1] ?>"><?= $status_info[0] ?></span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-secondary" onclick="alert('Просмотр заказа <?= htmlspecialchars($order['order_number']) ?>')">Просмотр</button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
