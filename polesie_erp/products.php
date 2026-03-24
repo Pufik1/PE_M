@@ -54,10 +54,10 @@ include 'header.php';
         <p>Каталог изделий ОАО "Полесьеэлектромаш"</p>
     </div>
     <div class="user-profile">
-        <div class="avatar"><?php echo strtoupper(substr($_SESSION['username'], 0, 2)); ?></div>
+        <div class="avatar"><?php echo strtoupper(substr($_SESSION['user_login'], 0, 2)); ?></div>
         <div class="user-info">
-            <span class="user-name"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
-            <span class="user-role"><?php echo getRoleName($_SESSION['role']); ?></span>
+            <span class="user-name"><?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
+            <span class="user-role"><?php echo getRoleName($_SESSION['user_role']); ?></span>
         </div>
     </div>
 </div>
