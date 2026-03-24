@@ -4,6 +4,8 @@
  * ОАО "Полесьеэлектромаш"
  */
 
+require_once 'config.php';
+
 if (!isset($page_title)) $page_title = 'ERP система';
 if (!isset($active_page)) $active_page = 'dashboard';
 ?>
