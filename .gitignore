@@ -2,18 +2,14 @@
 # Compiled and build artifacts
 *.pyc
 __pycache__/
-*.o
-*.obj
 
 # Dependencies
-.venv/
-venv/
-node_modules/
+vendor/
+composer.lock
 
 # Logs and temp files
 *.log
 *.tmp
-*.swp
 
 # Environment
 .env
@@ -24,13 +20,7 @@ node_modules/
 .vscode/
 .idea/
 
-# Coverage reports
-.coverage
-coverage/
-htmlcov/
-
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
+# OS generated files
+.DS_Store
+Thumbs.db
 ```
