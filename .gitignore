@@ -1,1 +1,34 @@
-Nothing should be ignored based on the provided file changes. The only modified file is 'polesie_erp/users.php', which appears to be a source code file and should not be added to .gitignore.
+```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+
+# Dependencies
+vendor/
+node_modules/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# Distribution and build directories
+dist/
+build/
+target/
+
+# PHP specific
+*.php~
+*.php.bak
+```
