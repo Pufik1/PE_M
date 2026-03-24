@@ -126,13 +126,13 @@ include 'header.php';
                                 <th>Статус</th>
                                 <th>Менеджер</th>
                                 <th>Дата</th>
-                                <th>Действия</th>
+                                <th style="width: 120px;">Действия</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($orders)): ?>
                                 <tr>
-                                    <td colspan="7" style="text-align: center;">Заказов не найдено</td>
+                                    <td colspan="7" style="text-align: center; padding: 40px;">Заказов не найдено</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($orders as $order): ?>
@@ -166,9 +166,23 @@ include 'header.php';
                                         <td><?php echo htmlspecialchars($order['manager_name'] ?? 'Не назначен'); ?></td>
                                         <td><?php echo date('d.m.Y', strtotime($order['created_at'])); ?></td>
                                         <td>
-                                            <button class="btn-sm btn-primary" onclick="alert('Редактирование заказа #<?php echo htmlspecialchars($order['order_number']); ?>')">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <button onclick="openEditModal(<?php echo htmlspecialchars($order['id']); ?>)" 
+                                                        class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors duration-200 border border-blue-200 shadow-sm"
+                                                        title="Редактировать">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                </button>
+                                                
+                                                <button onclick="deleteOrder(<?php echo htmlspecialchars($order['id']); ?>)" 
+                                                        class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors duration-200 border border-red-200 shadow-sm"
+                                                        title="Удалить">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
