@@ -376,6 +376,46 @@ if (!isset($active_page)) $active_page = 'dashboard';
             opacity: 0.5;
         }
 
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+        }
+        .modal-content {
+            position: relative;
+            z-index: 1001;
+            width: 100%;
+            max-width: 600px;
+            margin: 16px;
+        }
+        .btn-close {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: all 0.2s;
+        }
+        .btn-close:hover {
+            color: var(--text-primary);
+        }
+
         /* Grid layouts */
         .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
