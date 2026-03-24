@@ -230,7 +230,7 @@ include 'header.php';
     <div class="card" style="grid-column: span 2;">
         <div class="card-header">
             <h3>Материалы на складе</h3>
-            <button class="btn btn-sm" onclick="alert('Функция добавления материала')">
+            <button class="btn btn-sm" onclick="addMaterial()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -299,13 +299,13 @@ include 'header.php';
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
-                                        <button onclick="adjustStock(<?php echo $material['id']; ?>)" 
+                                        <button onclick="createOperation(<?php echo $material['id']; ?>)" 
                                                 style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; cursor: pointer; transition: all 0.2s;"
-                                                title="Корректировка остатка"
+                                                title="Операция с материалом"
                                                 onmouseover="this.style.background='rgba(16, 185, 129, 0.2)'; this.style.transform='translateY(-1px)';"
                                                 onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.transform='translateY(0)';">
                                             <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 36v-3m-3 3h.01M9 17h.01M9 21h.01M9 21h2u5a2 2 0 002-2V7a2 2 0 00-2-2H9a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                                             </svg>
                                         </button>
                                     </div>
@@ -322,7 +322,7 @@ include 'header.php';
     <div class="card">
         <div class="card-header">
             <h3>Операции с материалами</h3>
-            <button class="btn btn-sm" onclick="alert('Функция создания операции')">
+            <button class="btn btn-sm" onclick="createOperationForNew()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -377,16 +377,274 @@ include 'header.php';
     </div>
 </div>
 
+<!-- Модальное окно для добавления/редактирования материала -->
+<div id="materialModal" class="modal-overlay" style="display: none;" onclick="closeMaterialModal(event)">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="card-header" style="border-bottom: 1px solid var(--border); padding: 20px 24px;">
+            <h3 id="materialModalTitle" style="margin: 0;">Добавить материал</h3>
+            <button onclick="closeMaterialModalDirect()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <form id="materialForm" onsubmit="submitMaterialForm(event)" style="padding: 24px;">
+            <input type="hidden" name="id" id="materialId">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Наименование *</label>
+                    <input type="text" name="name" id="materialName" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Тип материала *</label>
+                    <select name="type" id="materialType" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        <option value="">Выберите тип</option>
+                        <option value="metal">Металлы</option>
+                        <option value="paint">Краски и покрытия</option>
+                        <option value="electronics">Электроника</option>
+                        <option value="packaging">Упаковка</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Ед. измерения</label>
+                    <input type="text" name="unit" id="materialUnit" value="кг" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Цена (BYN) *</label>
+                    <input type="number" step="0.01" min="0" name="price_byn" id="materialPrice" required value="0" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Текущий остаток *</label>
+                    <input type="number" step="0.01" min="0" name="current_stock" id="materialStock" required value="0" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Мин. уровень *</label>
+                    <input type="number" step="0.01" min="0" name="min_stock_level" id="materialMinStock" required value="0" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                </div>
+            </div>
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Описание</label>
+                <textarea name="description" id="materialDescription" rows="3" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px; resize: vertical;"></textarea>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" onclick="closeMaterialModalDirect()" class="btn btn-secondary">Отмена</button>
+                <button type="submit" class="btn btn-primary" id="materialSubmitBtn">Добавить материал</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Модальное окно для создания операции -->
+<div id="operationModal" class="modal-overlay" style="display: none;" onclick="closeOperationModal(event)">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="card-header" style="border-bottom: 1px solid var(--border); padding: 20px 24px;">
+            <h3 style="margin: 0;">Операция с материалом</h3>
+            <button onclick="closeOperationModalDirect()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <form id="operationForm" onsubmit="submitOperationForm(event)" style="padding: 24px;">
+            <input type="hidden" name="material_id" id="operationMaterialId">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Материал</label>
+                <div id="operationMaterialName" style="padding: 10px 14px; background: var(--bg-hover); border-radius: 8px; color: var(--text-main); font-size: 14px; font-weight: 600;"></div>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Тип операции *</label>
+                <select name="type" id="operationType" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                    <option value="income">Приход</option>
+                    <option value="outcome">Расход</option>
+                    <option value="write_off">Списание</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Количество *</label>
+                <input type="number" step="0.01" min="0.01" name="quantity" id="operationQuantity" required style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+            </div>
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Комментарий</label>
+                <textarea name="comment" id="operationComment" rows="3" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px; resize: vertical;"></textarea>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" onclick="closeOperationModalDirect()" class="btn btn-secondary">Отмена</button>
+                <button type="submit" class="btn btn-primary">Выполнить операцию</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-function editMaterial(id) {
-    alert('Редактирование материала ID: ' + id);
-    // Здесь будет логика открытия модального окна или перехода на страницу редактирования
+// Глобальный массив материалов для использования в модальных окнах
+const materialsData = <?php echo json_encode($materials); ?>;
+
+// Открытие модального окна для добавления материала
+function addMaterial() {
+    document.getElementById('materialModalTitle').textContent = 'Добавить материал';
+    document.getElementById('materialId').value = '';
+    document.getElementById('materialName').value = '';
+    document.getElementById('materialType').value = '';
+    document.getElementById('materialUnit').value = 'кг';
+    document.getElementById('materialPrice').value = '0';
+    document.getElementById('materialStock').value = '0';
+    document.getElementById('materialMinStock').value = '0';
+    document.getElementById('materialDescription').value = '';
+    document.getElementById('materialSubmitBtn').textContent = 'Добавить материал';
+    
+    const modal = document.getElementById('materialModal');
+    modal.style.display = 'flex';
 }
 
-function adjustStock(id) {
-    alert('Корректировка остатка материала ID: ' + id);
-    // Здесь будет логика открытия модального окна для корректировки остатка
+// Открытие модального окна для редактирования материала
+function editMaterial(id) {
+    const material = materialsData.find(m => m.id == id);
+    if (!material) {
+        alert('Материал не найден');
+        return;
+    }
+    
+    document.getElementById('materialModalTitle').textContent = 'Редактировать материал';
+    document.getElementById('materialId').value = material.id;
+    document.getElementById('materialName').value = material.name;
+    document.getElementById('materialType').value = material.type;
+    document.getElementById('materialUnit').value = material.unit || 'кг';
+    document.getElementById('materialPrice').value = material.price_byn || 0;
+    document.getElementById('materialStock').value = material.current_stock || 0;
+    document.getElementById('materialMinStock').value = material.min_stock_level || 0;
+    document.getElementById('materialDescription').value = material.description || '';
+    document.getElementById('materialSubmitBtn').textContent = 'Сохранить изменения';
+    
+    const modal = document.getElementById('materialModal');
+    modal.style.display = 'flex';
 }
+
+// Закрытие модального окна материала
+function closeMaterialModal(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+        closeMaterialModalDirect();
+    }
+}
+
+function closeMaterialModalDirect() {
+    document.getElementById('materialModal').style.display = 'none';
+}
+
+// Отправка формы материала
+function submitMaterialForm(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(document.getElementById('materialForm'));
+    const isEdit = formData.get('id') !== '';
+    const url = isEdit ? 'api/update_material.php' : 'api/create_material.php';
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            closeMaterialModalDirect();
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Ошибка соединения: ' + error.message);
+    });
+}
+
+// Открытие модального окна для операции с материалом
+function createOperation(id) {
+    const material = materialsData.find(m => m.id == id);
+    if (!material) {
+        alert('Материал не найден');
+        return;
+    }
+    
+    document.getElementById('operationMaterialId').value = material.id;
+    document.getElementById('operationMaterialName').textContent = material.name + ' (остаток: ' + (material.current_stock || 0) + ' ' + (material.unit || 'кг') + ')';
+    document.getElementById('operationType').value = 'income';
+    document.getElementById('operationQuantity').value = '';
+    document.getElementById('operationComment').value = '';
+    
+    const modal = document.getElementById('operationModal');
+    modal.style.display = 'flex';
+}
+
+// Открытие модального окна для операции без выбора материала (для кнопки в списке операций)
+function createOperationForNew() {
+    if (materialsData.length === 0) {
+        alert('Нет доступных материалов. Сначала добавьте материал.');
+        return;
+    }
+    
+    // Открываем операцию для первого материала в списке
+    createOperation(materialsData[0].id);
+    alert('Выберите материал из списка для выполнения операции');
+}
+
+// Закрытие модального окна операции
+function closeOperationModal(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+        closeOperationModalDirect();
+    }
+}
+
+function closeOperationModalDirect() {
+    document.getElementById('operationModal').style.display = 'none';
+}
+
+// Отправка формы операции
+function submitOperationForm(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(document.getElementById('operationForm'));
+    
+    fetch('api/create_material_operation.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Операция выполнена успешно! Новый остаток: ' + data.new_stock + ' ' + (data.material_name || ''));
+            closeOperationModalDirect();
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Ошибка соединения: ' + error.message);
+    });
+}
+
+// Добавляем стили для модальных окон
+const modalStyles = document.createElement('style');
+modalStyles.textContent = `
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .modal-content {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-height: 90vh;
+        overflow-y: auto;
+        width: 100%;
+        max-width: 600px;
+    }
+`;
+document.head.appendChild(modalStyles);
 </script>
 
 <?php include 'footer.php'; ?>
