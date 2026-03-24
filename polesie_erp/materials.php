@@ -91,28 +91,6 @@ try {
     $materials = [];
 }
 
-// Получаем последние операции с материалами
-try {
-    $stmt = $pdo->query("SELECT wl.*, 
-                        u.full_name as user_name,
-                        m.name as item_name,
-                        CASE wl.type
-                            WHEN 'income' THEN 'Приход'
-                            WHEN 'outcome' THEN 'Расход'
-                            WHEN 'write_off' THEN 'Списание'
-                            ELSE wl.type
-                        END as type_text
-                        FROM warehouse_logs wl
-                        LEFT JOIN users u ON wl.user_id = u.id
-                        LEFT JOIN materials m ON wl.item_id = m.id AND wl.item_type = 'material'
-                        WHERE wl.item_type = 'material'
-                        ORDER BY wl.date_op DESC
-                        LIMIT 10");
-    $recent_operations = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $recent_operations = [];
-}
-
 $page_title = 'Материалы';
 $active_page = 'materials';
 include 'header.php';
@@ -225,9 +203,8 @@ include 'header.php';
     </form>
 </div>
 
-<div class="grid-2" style="gap: 32px;">
-    <!-- Таблица материалов -->
-    <div class="card" style="grid-column: span 2;">
+<!-- Таблица материалов -->
+<div class="card" style="margin-bottom: 32px;">
         <div class="card-header">
             <h3>Материалы на складе</h3>
             <button class="btn btn-sm" onclick="addMaterial()">
@@ -317,65 +294,6 @@ include 'header.php';
             </table>
         </div>
     </div>
-
-    <!-- Последние операции -->
-    <div class="card">
-        <div class="card-header">
-            <h3>Операции с материалами</h3>
-            <button class="btn btn-sm" onclick="createOperationForNew()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Операция
-            </button>
-        </div>
-        <div style="padding: 0;">
-            <?php if (empty($recent_operations)): ?>
-                <div style="padding: 40px; text-align: center; color: var(--text-muted);">
-                    <svg style="width: 48px; height: 48px; margin: 0 auto 12px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                    <p>Операций пока нет</p>
-                </div>
-            <?php else: ?>
-                <div class="operation-list">
-                    <?php foreach ($recent_operations as $op): ?>
-                        <div class="operation-item">
-                            <div class="operation-icon <?php echo $op['type'] === 'income' ? 'green' : ($op['type'] === 'outcome' ? 'red' : 'orange'); ?>">
-                                <?php if ($op['type'] === 'income'): ?>
-                                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
-                                    </svg>
-                                <?php elseif ($op['type'] === 'outcome'): ?>
-                                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
-                                    </svg>
-                                <?php else: ?>
-                                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                <?php endif; ?>
-                            </div>
-                            <div class="operation-details">
-                                <div class="operation-title"><?php echo htmlspecialchars($op['item_name'] ?? 'Неизвестно'); ?></div>
-                                <div class="operation-meta">
-                                    <span class="operation-type"><?php echo htmlspecialchars($op['type_text']); ?></span>
-                                    <span class="operation-date"><?php echo date('d.m.Y H:i', strtotime($op['date_op'])); ?></span>
-                                </div>
-                            </div>
-                            <div class="operation-amount">
-                                <span style="color: <?php echo $op['type'] === 'income' ? 'var(--success)' : 'var(--danger)'; ?>; font-weight: 600;">
-                                    <?php echo $op['type'] === 'income' ? '+' : '-'; ?><?php echo number_format(abs($op['quantity']), 2, ',', ' '); ?>
-                                </span>
-                                <div style="font-size: 12px; color: var(--text-muted);"><?php echo htmlspecialchars($op['unit'] ?? ''); ?></div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
 
 <!-- Модальное окно для добавления/редактирования материала -->
 <div id="materialModal" class="modal-overlay" style="display: none;" onclick="closeMaterialModal(event)">
@@ -569,18 +487,6 @@ function createOperation(id) {
     
     const modal = document.getElementById('operationModal');
     modal.style.display = 'flex';
-}
-
-// Открытие модального окна для операции без выбора материала (для кнопки в списке операций)
-function createOperationForNew() {
-    if (materialsData.length === 0) {
-        alert('Нет доступных материалов. Сначала добавьте материал.');
-        return;
-    }
-    
-    // Открываем операцию для первого материала в списке
-    createOperation(materialsData[0].id);
-    alert('Выберите материал из списка для выполнения операции');
 }
 
 // Закрытие модального окна операции
