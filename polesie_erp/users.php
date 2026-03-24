@@ -128,7 +128,7 @@ include 'header.php';
     <div class="card-header">
         <div class="card-title">Список сотрудников</div>
         <?php if (checkRole(['admin', 'director'])): ?>
-        <button class="btn btn-primary" onclick="alert('Функция добавления сотрудника будет доступна в следующей версии')">
+        <button class="btn btn-primary" onclick="openAddUserModal()">
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -153,6 +153,9 @@ include 'header.php';
                     <th>Роль</th>
                     <th>Отдел</th>
                     <th>Дата регистрации</th>
+                    <?php if (checkRole(['admin', 'director'])): ?>
+                    <th>Действия</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -184,6 +187,20 @@ include 'header.php';
                     <td>
                         <?= date('d.m.Y', strtotime($user['created_at'])) ?>
                     </td>
+                    <?php if (checkRole(['admin', 'director'])): ?>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" 
+                                onclick="openEditUserModal(
+                                    <?= $user['id'] ?>,
+                                    '<?= addslashes($user['full_name']) ?>',
+                                    '<?= addslashes($user['login']) ?>',
+                                    '<?= $user['role'] ?>',
+                                    '<?= addslashes($user['department'] ?? '') ?>'
+                                )">
+                            Редактировать
+                        </button>
+                    </td>
+                    <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -193,5 +210,212 @@ include 'header.php';
 </div>
 
 <?php endif; ?>
+
+<!-- Modal: Добавить/Редактировать сотрудника -->
+<div id="userModal" class="modal" style="display: none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 id="modalTitle">Добавить сотрудника</h3>
+            <button class="btn-close" onclick="closeUserModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="userForm">
+                <input type="hidden" id="userId" name="id" value="">
+                
+                <div class="form-group">
+                    <label for="full_name">ФИО *</label>
+                    <input type="text" id="full_name" name="full_name" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="login">Логин *</label>
+                    <input type="text" id="login" name="login" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Пароль <span id="passwordHint">(оставьте пустым для сохранения текущего)</span></label>
+                    <input type="password" id="password" name="password" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="role">Роль *</label>
+                    <select id="role" name="role" class="form-control" required>
+                        <option value="">Выберите роль</option>
+                        <option value="admin">Администратор</option>
+                        <option value="director">Директор</option>
+                        <option value="manager">Менеджер</option>
+                        <option value="engineer">Инженер</option>
+                        <option value="warehouse">Складской работник</option>
+                        <option value="accountant">Бухгалтер</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="department">Отдел</label>
+                    <input type="text" id="department" name="department" class="form-control">
+                </div>
+                
+                <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary" id="saveUserBtn">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+}
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+.modal-content {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    margin: 50px auto;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    padding: 0;
+    line-height: 1;
+}
+.btn-close:hover {
+    color: #333;
+}
+.modal-body {
+    padding: 20px;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+}
+.form-group label span {
+    font-weight: normal;
+    font-size: 12px;
+    color: #999;
+}
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+</style>
+
+<script>
+// Открытие модального окна для добавления сотрудника
+function openAddUserModal() {
+    document.getElementById('modalTitle').textContent = 'Добавить сотрудника';
+    document.getElementById('userForm').reset();
+    document.getElementById('userId').value = '';
+    document.getElementById('password').required = true;
+    document.getElementById('passwordHint').style.display = 'none';
+    document.getElementById('userModal').style.display = 'block';
+}
+
+// Открытие модального окна для редактирования сотрудника
+function openEditUserModal(userId, fullName, login, role, department) {
+    document.getElementById('modalTitle').textContent = 'Редактировать сотрудника';
+    document.getElementById('userId').value = userId;
+    document.getElementById('full_name').value = fullName;
+    document.getElementById('login').value = login;
+    document.getElementById('role').value = role;
+    document.getElementById('department').value = department;
+    document.getElementById('password').value = '';
+    document.getElementById('password').required = false;
+    document.getElementById('passwordHint').style.display = 'inline';
+    document.getElementById('userModal').style.display = 'block';
+}
+
+// Закрытие модального окна
+function closeUserModal() {
+    document.getElementById('userModal').style.display = 'none';
+    document.getElementById('userForm').reset();
+}
+
+// Закрытие по клику на overlay
+document.querySelector('.modal-overlay').addEventListener('click', function() {
+    closeUserModal();
+});
+
+// Обработка отправки формы
+document.getElementById('userForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const userId = document.getElementById('userId').value;
+    const isEdit = userId !== '';
+    
+    const url = isEdit ? 'api/update_user.php' : 'api/create_user.php';
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            closeUserModal();
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Ошибка соединения: ' + error);
+    });
+});
+</script>
 
 <?php include 'footer.php'; ?>
