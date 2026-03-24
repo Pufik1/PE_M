@@ -45,6 +45,8 @@ try {
     $error = "Ошибка: " . $e->getMessage();
 }
 
+$page_title = 'Продукция';
+$active_page = 'products';
 include 'header.php';
 ?>
 

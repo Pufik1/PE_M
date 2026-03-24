@@ -38,7 +38,7 @@ if (session_status() === PHP_SESSION_NONE) {
  */
 function checkAuth() {
     if (!isset($_SESSION['user_id'])) {
-        header('Location: /polesie_erp/index.php');
+        header('Location: index.php');
         exit;
     }
 }
@@ -63,7 +63,7 @@ function checkRole($allowedRoles = []) {
  */
 function logout() {
     session_destroy();
-    header('Location: /polesie_erp/index.php');
+    header('Location: index.php');
     exit;
 }
 

@@ -56,6 +56,7 @@ try {
 }
 
 $page_title = 'Заказы';
+$active_page = 'orders';
 include 'header.php';
 ?>
 
