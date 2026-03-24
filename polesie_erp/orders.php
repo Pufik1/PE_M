@@ -38,6 +38,7 @@ try {
                 WHEN o.status = 'new' THEN 'Новый'
                 WHEN o.status = 'processing' THEN 'В обработке'
                 WHEN o.status = 'in_progress' THEN 'В производстве'
+                WHEN o.status = 'shipped' THEN 'Отгружен'
                 WHEN o.status = 'ready' THEN 'Готов'
                 WHEN o.status = 'closed' THEN 'Завершен'
                 WHEN o.status = 'cancelled' THEN 'Отменен'
@@ -161,6 +162,7 @@ include 'header.php';
                                                 case 'in_progress':
                                                     $statusClass = 'status-process';
                                                     break;
+                                                case 'shipped':
                                                 case 'ready':
                                                     $statusClass = 'status-ready';
                                                     break;

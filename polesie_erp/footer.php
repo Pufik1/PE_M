@@ -36,18 +36,12 @@
                 </div>
                 
                 <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Менеджер</label>
-                    <select id="editUserId" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Выберите менеджера</option>
-                    </select>
-                </div>
-                
-                <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Статус</label>
                     <select id="editStatus" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="new">Новый</option>
                         <option value="processing">В обработке</option>
                         <option value="in_progress">В производстве</option>
+                        <option value="shipped">Отгружен</option>
                         <option value="ready">Готов</option>
                         <option value="closed">Завершен</option>
                         <option value="cancelled">Отменен</option>
@@ -92,14 +86,12 @@
                     document.getElementById('editOrderNumber').value = order.order_number;
                     document.getElementById('editCreatedAt').value = order.created_at;
                     document.getElementById('editPartnerId').value = order.partner_id;
-                    document.getElementById('editUserId').value = order.user_id;
                     document.getElementById('editStatus').value = order.status;
                     document.getElementById('editTotalAmount').value = order.total_amount_byn;
                     document.getElementById('editComment').value = order.comment || '';
                     
-                    // Загрузка списков клиентов и менеджеров
+                    // Загрузка списка клиентов
                     loadPartners(order.partner_id);
-                    loadUsers(order.user_id);
                 } else {
                     alert('Ошибка загрузки данных заказа');
                 }
@@ -136,32 +128,10 @@
             .catch(error => console.error('Error loading partners:', error));
     }
     
-    function loadUsers(selectedId) {
-        fetch('api/get_users.php')
-            .then(response => response.json())
-            .then(data => {
-                const select = document.getElementById('editUserId');
-                select.innerHTML = '<option value="">Выберите менеджера</option>';
-                if (data.success) {
-                    data.users.forEach(user => {
-                        const option = document.createElement('option');
-                        option.value = user.id;
-                        option.textContent = user.full_name || user.username;
-                        if (user.id == selectedId) {
-                            option.selected = true;
-                        }
-                        select.appendChild(option);
-                    });
-                }
-            })
-            .catch(error => console.error('Error loading users:', error));
-    }
-    
     function saveOrder() {
         const formData = new FormData();
         formData.append('id', document.getElementById('editOrderId').value);
         formData.append('partner_id', document.getElementById('editPartnerId').value);
-        formData.append('user_id', document.getElementById('editUserId').value);
         formData.append('status', document.getElementById('editStatus').value);
         formData.append('total_amount_byn', document.getElementById('editTotalAmount').value);
         formData.append('comment', document.getElementById('editComment').value);

@@ -22,7 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Получение данных из формы
 $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 $partnerId = isset($_POST['partner_id']) && $_POST['partner_id'] !== '' ? (int)$_POST['partner_id'] : null;
-$userId = isset($_POST['user_id']) && $_POST['user_id'] !== '' ? (int)$_POST['user_id'] : null;
 $status = isset($_POST['status']) ? $_POST['status'] : 'new';
 $totalAmount = isset($_POST['total_amount_byn']) && $_POST['total_amount_byn'] !== '' ? (float)$_POST['total_amount_byn'] : 0;
 $comment = isset($_POST['comment']) ? $_POST['comment'] : '';
@@ -35,7 +34,6 @@ if ($id <= 0) {
 try {
     $stmt = $pdo->prepare("UPDATE orders SET 
         partner_id = ?, 
-        user_id = ?, 
         status = ?, 
         total_amount_byn = ?, 
         comment = ? 
@@ -43,7 +41,6 @@ try {
     
     $stmt->execute([
         $partnerId,
-        $userId,
         $status,
         $totalAmount,
         $comment,
