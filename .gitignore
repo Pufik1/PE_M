@@ -1,1 +1,22 @@
-Nothing should be ignored based on the provided file changes. The only modified file is 'polesie_erp/dashboard.php', which appears to be a source code file and should not be added to .gitignore.
+```php
+# Environment variables
+.env
+.env.local
+.env.*
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# PHP specific
+*.php~
+php_errors.log
+error_log
+```

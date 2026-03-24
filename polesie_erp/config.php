@@ -117,3 +117,32 @@ function getOrderStatusName($status) {
     ];
     return $statuses[$status] ?? [$status, 'secondary'];
 }
+
+/**
+ * Получение имени пользователя из БД
+ */
+function getUserName() {
+    global $pdo;
+    if (!isset($_SESSION['user_id'])) {
+        return 'Гость';
+    }
+    
+    try {
+        $stmt = $pdo->prepare("SELECT name FROM users WHERE id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $user = $stmt->fetch();
+        return $user['name'] ?? ($_SESSION['user_name'] ?? 'Пользователь');
+    } catch (PDOException $e) {
+        return $_SESSION['user_name'] ?? 'Пользователь';
+    }
+}
+
+/**
+ * Получение роли пользователя (название)
+ */
+function getUserRole() {
+    if (!isset($_SESSION['user_role'])) {
+        return '';
+    }
+    return getRoleName($_SESSION['user_role']);
+}
