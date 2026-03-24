@@ -71,43 +71,55 @@ include 'header.php';
             <!-- Карточки статистики -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon" style="background-color: #e3f2fd;">
-                        <i class="fas fa-shopping-cart" style="color: #1976d2;"></i>
+                    <div class="stat-header">
+                        <div class="stat-title">Всего заказов</div>
+                        <div class="stat-icon blue">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                        </div>
                     </div>
-                    <div class="stat-details">
-                        <h3><?php echo $total_orders; ?></h3>
-                        <p>Всего заказов</p>
-                    </div>
+                    <div class="stat-value"><?php echo $total_orders; ?></div>
+                    <div class="stat-change">заказов всего</div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon" style="background-color: #fff3e0;">
-                        <i class="fas fa-clock" style="color: #f57c00;"></i>
+                    <div class="stat-header">
+                        <div class="stat-title">Новые заказы</div>
+                        <div class="stat-icon green">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
                     </div>
-                    <div class="stat-details">
-                        <h3><?php echo $new_orders; ?></h3>
-                        <p>Новые заказы</p>
-                    </div>
+                    <div class="stat-value"><?php echo $new_orders; ?></div>
+                    <div class="stat-change">ожидают обработки</div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon" style="background-color: #e8f5e9;">
-                        <i class="fas fa-cogs" style="color: #388e3c;"></i>
+                    <div class="stat-header">
+                        <div class="stat-title">В работе</div>
+                        <div class="stat-icon orange">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
                     </div>
-                    <div class="stat-details">
-                        <h3><?php echo $process_orders; ?></h3>
-                        <p>В работе</p>
-                    </div>
+                    <div class="stat-value"><?php echo $process_orders; ?></div>
+                    <div class="stat-change">в производстве</div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon" style="background-color: #f3e5f5;">
-                        <i class="fas fa-ruble-sign" style="color: #7b1fa2;"></i>
+                    <div class="stat-header">
+                        <div class="stat-title">Выручка</div>
+                        <div class="stat-icon purple">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
                     </div>
-                    <div class="stat-details">
-                        <h3><?php echo number_format($revenue, 2, '.', ' '); ?> BYN</h3>
-                        <p>Выручка (закрытые)</p>
-                    </div>
+                    <div class="stat-value"><?php echo number_format($revenue, 2, '.', ' '); ?> BYN</div>
+                    <div class="stat-change">закрытые заказы</div>
                 </div>
             </div>
 
