@@ -44,448 +44,99 @@ try {
 } catch (PDOException $e) {
     $error = "Ошибка: " . $e->getMessage();
 }
+
+include 'header.php';
 ?>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Продукция - ОАО "Полесьеэлектромаш"</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #111827;
-            --bg-card: #1f2937;
-            --bg-hover: #374151;
-            --border-color: #374151;
-            --text-primary: #f9fafb;
-            --text-secondary: #9ca3af;
-            --text-muted: #6b7280;
-            --primary: #3b82f6;
-            --primary-light: #60a5fa;
-            --primary-dark: #2563eb;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #06b6d4;
-        }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg-primary); 
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            position: fixed; left: 0; top: 0; bottom: 0; width: 280px;
-            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-            border-right: 1px solid var(--border-color);
-            padding: 24px 0; z-index: 100;
-        }
-        .sidebar-header { 
-            padding: 0 24px 24px; 
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 16px;
-        }
-        .logo { 
-            display: flex; align-items: center; gap: 14px; 
-            color: var(--text-primary); text-decoration: none; 
-        }
-        .logo-icon {
-            width: 44px; height: 44px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border-radius: 10px; 
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 15px; color: white;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-        .logo-text { font-size: 13px; font-weight: 600; line-height: 1.4; letter-spacing: 0.3px; }
-        
-        .nav-menu { padding: 8px 0; }
-        .nav-item {
-            display: flex; align-items: center; gap: 12px; 
-            padding: 12px 24px;
-            color: var(--text-secondary); 
-            text-decoration: none; 
-            transition: all 0.2s; 
-            font-size: 14px;
-            font-weight: 500;
-            border-left: 3px solid transparent;
-        }
-        .nav-item:hover { 
-            background: var(--bg-hover); 
-            color: var(--text-primary); 
-        }
-        .nav-item.active { 
-            background: rgba(59, 130, 246, 0.15); 
-            color: var(--primary-light); 
-            border-left-color: var(--primary);
-        }
-        .nav-icon {
-            width: 20px; height: 20px;
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        /* Main Content */
-        .main-content { margin-left: 280px; min-height: 100vh; background: var(--bg-primary); }
-        .top-bar {
-            background: var(--bg-secondary); 
-            border-bottom: 1px solid var(--border-color);
-            padding: 20px 32px; 
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .page-title { 
-            font-size: 22px; 
-            font-weight: 700; 
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-        }
-        .user-menu { display: flex; align-items: center; gap: 16px; }
-        .user-info { text-align: right; }
-        .user-name { 
-            font-size: 14px; 
-            font-weight: 600; 
-            color: var(--text-primary); 
-        }
-        .user-role { 
-            font-size: 12px; 
-            color: var(--text-muted); 
-        }
-        .btn-logout {
-            padding: 8px 16px; 
-            background: var(--bg-card); 
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px; 
-            font-size: 13px; 
-            font-weight: 500;
-            cursor: pointer; 
-            text-decoration: none; 
-            transition: all 0.2s;
-        }
-        .btn-logout:hover { 
-            background: var(--bg-hover);
-            color: var(--text-primary);
-            border-color: var(--text-muted);
-        }
-
-        /* Content */
-        .content { padding: 32px; }
-
-        /* Filters */
-        .filters {
-            background: var(--bg-secondary); 
-            border: 1px solid var(--border-color);
-            border-radius: 12px; 
-            padding: 20px 24px;
-            margin-bottom: 24px; 
-            display: flex; gap: 16px; align-items: end; flex-wrap: wrap;
-        }
-
-        .filter-group { display: flex; flex-direction: column; gap: 6px; }
-        .filter-group label { 
-            font-size: 12px; 
-            font-weight: 500; 
-            color: var(--text-muted); 
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        select, input[type="text"] {
-            padding: 10px 14px; 
-            background: var(--bg-card);
-            border: 1px solid var(--border-color); 
-            border-radius: 8px;
-            font-size: 14px; 
-            font-family: inherit; 
-            color: var(--text-primary);
-            outline: none; 
-            transition: all 0.2s;
-            min-width: 200px;
-        }
-        select:focus, input[type="text"]:focus { 
-            border-color: var(--primary); 
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); 
-        }
-        select option {
-            background: var(--bg-card);
-            color: var(--text-primary);
-        }
-
-        .btn {
-            padding: 10px 20px; 
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white; 
-            border: none;
-            border-radius: 8px; 
-            font-size: 14px; 
-            font-weight: 600; 
-            cursor: pointer;
-            text-decoration: none; 
-            transition: all 0.2s; 
-            display: inline-block;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-        }
-        .btn:hover { 
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        }
-        .btn-secondary { 
-            background: var(--bg-card); 
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-            box-shadow: none;
-        }
-        .btn-secondary:hover { 
-            background: var(--bg-hover);
-            color: var(--text-primary);
-            border-color: var(--text-muted);
-        }
-
-        /* Products Grid */
-        .products-grid {
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
-            gap: 20px;
-        }
-
-        .product-card {
-            background: var(--bg-secondary); 
-            border: 1px solid var(--border-color);
-            border-radius: 12px; 
-            overflow: hidden;
-            transition: all 0.3s;
-        }
-        .product-card:hover { 
-            transform: translateY(-4px); 
-            border-color: var(--primary);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-        }
-
-        .product-header {
-            padding: 16px 20px; 
-            border-bottom: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--bg-card);
-        }
-        .product-article { 
-            font-size: 12px; 
-            font-weight: 600; 
-            color: var(--text-muted); 
-            letter-spacing: 0.5px;
-        }
-        .product-category {
-            font-size: 11px; 
-            padding: 4px 12px; 
-            border-radius: 9999px;
-            background: rgba(59, 130, 246, 0.15); 
-            color: var(--primary-light); 
-            font-weight: 600;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-
-        .product-body { padding: 20px; }
-        .product-name { 
-            font-size: 16px; 
-            font-weight: 600; 
-            color: var(--text-primary); 
-            margin-bottom: 12px;
-            line-height: 1.4;
-        }
-        .product-specs { 
-            font-size: 13px; 
-            color: var(--text-secondary); 
-            margin-bottom: 16px; 
-            line-height: 1.8; 
-        }
-        .product-specs strong { color: var(--text-primary); }
-
-        .product-footer {
-            padding: 16px 20px; 
-            border-top: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--bg-card);
-        }
-        .product-price { 
-            font-size: 20px; 
-            font-weight: 700; 
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-        }
-        .product-stock { 
-            font-size: 13px; 
-            color: var(--text-muted); 
-        }
-        .stock-ok { color: var(--success); }
-        .stock-low { color: var(--warning); }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center; 
-            padding: 80px 20px; 
-            color: var(--text-muted);
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-        }
-        .empty-state-icon {
-            font-size: 56px; 
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
-            .main-content { margin-left: 0; }
-        }
-    </style>
-</head>
-<body>
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <a href="dashboard.php" class="logo">
-                <div class="logo-icon">ПЭ</div>
-                <div class="logo-text">ОАО<br>Полесьеэлектромаш</div>
-            </a>
+<div class="header-bar">
+    <div class="page-title">
+        <h1>Продукция</h1>
+        <p>Каталог изделий ОАО "Полесьеэлектромаш"</p>
+    </div>
+    <div class="user-profile">
+        <div class="avatar"><?php echo strtoupper(substr($_SESSION['username'], 0, 2)); ?></div>
+        <div class="user-info">
+            <span class="user-name"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+            <span class="user-role"><?php echo getRoleName($_SESSION['role']); ?></span>
         </div>
-        <nav class="nav-menu">
-            <a href="dashboard.php" class="nav-item">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                Главная
-            </a>
-            <a href="products.php" class="nav-item active">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-                </svg>
-                Продукция
-            </a>
-            <a href="orders.php" class="nav-item">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                </svg>
-                Заказы
-            </a>
-            <a href="partners.php" class="nav-item">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                Контрагенты
-            </a>
-            <a href="production.php" class="nav-item">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                Производство
-            </a>
-            <a href="warehouse.php" class="nav-item">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                </svg>
-                Склад
-            </a>
-            <a href="materials.php" class="nav-item">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                </svg>
-                Материалы
-            </a>
-            <?php if (checkRole(['admin', 'director'])): ?>
-            <a href="users.php" class="nav-item">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
-                Сотрудники
-            </a>
-            <?php endif; ?>
-            <a href="reports.php" class="nav-item">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v10a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                Отчеты
-            </a>
-        </nav>
-    </aside>
+    </div>
+</div>
 
-    <main class="main-content">
-        <header class="top-bar">
-            <h1 class="page-title">Каталог продукции</h1>
-            <div class="user-menu">
-                <div class="user-info">
-                    <div class="user-name"><?= htmlspecialchars(getUserName()) ?></div>
-                    <div class="user-role"><?= getUserRole() ?></div>
-                </div>
-                <a href="logout.php" class="btn-logout">Выход</a>
-            </div>
-        </header>
+<?php if (isset($error)): ?>
+    <div class="card" style="border-color: var(--danger); margin-bottom: 24px;">
+        <p style="color: var(--danger);"><?php echo htmlspecialchars($error); ?></p>
+    </div>
+<?php endif; ?>
 
-        <div class="content">
-            <div class="filters">
-                <form method="GET" style="display: flex; gap: 16px; align-items: end; flex-wrap: wrap;">
-                    <div class="filter-group">
-                        <label>Категория</label>
-                        <select name="category">
-                            <option value="">Все категории</option>
-                            <?php foreach ($categories as $key => $name): ?>
-                            <option value="<?= $key ?>" <?= $category_filter === $key ? 'selected' : '' ?>><?= $name ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Поиск</label>
-                        <input type="text" name="search" placeholder="Название или артикул" value="<?= htmlspecialchars($search) ?>">
-                    </div>
-                    <button type="submit" class="btn">Фильтр</button>
-                    <a href="products.php" class="btn btn-secondary">Сброс</a>
-                </form>
-            </div>
-
-            <div class="products-grid">
-                <?php foreach ($products as $product): ?>
-                <div class="product-card">
-                    <div class="product-header">
-                        <span class="product-article">Арт. <?= htmlspecialchars($product['article']) ?></span>
-                        <span class="product-category"><?= getCategoryName($product['category']) ?></span>
-                    </div>
-                    <div class="product-body">
-                        <div class="product-name"><?= htmlspecialchars($product['name']) ?></div>
-                        <div class="product-specs">
-                            <?php if ($product['power_kw']): ?>
-                            <div><strong>Мощность:</strong> <?= $product['power_kw'] ?> кВт</div>
-                            <?php endif; ?>
-                            <?php if ($product['voltage']): ?>
-                            <div><strong>Напряжение:</strong> <?= htmlspecialchars($product['voltage']) ?></div>
-                            <?php endif; ?>
-                            <div><strong>Описание:</strong> <?= htmlspecialchars($product['description']) ?></div>
-                        </div>
-                    </div>
-                    <div class="product-footer">
-                        <div class="product-price"><?= formatPrice($product['price_byn']) ?></div>
-                        <div class="product-stock <?= $product['stock_quantity'] < 20 ? 'stock-low' : 'stock-ok' ?>">
-                            На складе: <strong><?= $product['stock_quantity'] ?> шт.</strong>
-                        </div>
-                    </div>
-                </div>
+<!-- Filters -->
+<div class="card" style="margin-bottom: 32px;">
+    <form method="GET" style="display: flex; gap: 16px; align-items: end; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Категория</label>
+            <select name="category" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                <option value="">Все категории</option>
+                <?php foreach ($categories as $key => $name): ?>
+                    <option value="<?php echo $key; ?>" <?php echo $category_filter === $key ? 'selected' : ''; ?>><?php echo $name; ?></option>
                 <?php endforeach; ?>
-            </div>
-
-            <?php if (empty($products)): ?>
-            <div class="empty-state">
-                <div class="empty-state-icon">🔍</div>
-                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Продукция не найдена</div>
-                <div style="color: var(--text-muted);">Попробуйте изменить параметры поиска</div>
-            </div>
-            <?php endif; ?>
+            </select>
         </div>
-    </main>
-</body>
-</html>
+        <div style="flex: 2; min-width: 250px;">
+            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Поиск</label>
+            <input type="text" name="search" placeholder="Название или артикул..." value="<?php echo htmlspecialchars($search); ?>" style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Фильтр</button>
+            <a href="products.php" class="btn btn-secondary" style="margin-left: 8px;">Сброс</a>
+        </div>
+    </form>
+</div>
+
+<!-- Products Grid -->
+<?php if (empty($products)): ?>
+    <div class="card" style="text-align: center; padding: 60px 20px;">
+        <svg style="width: 64px; height: 64px; color: var(--text-muted); margin-bottom: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+        <h3 style="color: var(--text-main); margin-bottom: 8px;">Нет данных</h3>
+        <p style="color: var(--text-muted);">По вашему запросу ничего не найдено</p>
+    </div>
+<?php else: ?>
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+        <?php foreach ($products as $product): ?>
+            <div class="card" style="padding: 0; overflow: hidden;">
+                <div style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover);">
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Арт. <?php echo htmlspecialchars($product['article']); ?></span>
+                    <span class="badge badge-info"><?php echo htmlspecialchars($categories[$product['category']] ?? $product['category']); ?></span>
+                </div>
+                <div style="padding: 24px;">
+                    <h3 style="font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 12px;"><?php echo htmlspecialchars($product['name']); ?></h3>
+                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.8; margin-bottom: 20px;">
+                        <?php if ($product['power']): ?>
+                            <div><strong style="color: var(--text-main);">Мощность:</strong> <?php echo htmlspecialchars($product['power']); ?> кВт</div>
+                        <?php endif; ?>
+                        <?php if ($product['speed']): ?>
+                            <div><strong style="color: var(--text-main);">Обороты:</strong> <?php echo htmlspecialchars($product['speed']); ?> об/мин</div>
+                        <?php endif; ?>
+                        <?php if ($product['voltage']): ?>
+                            <div><strong style="color: var(--text-main);">Напряжение:</strong> <?php echo htmlspecialchars($product['voltage']); ?> В</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div style="padding: 20px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover);">
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Цена</div>
+                        <div style="font-size: 20px; font-weight: 700; color: var(--text-main);"><?php echo number_format($product['price'], 2, ',', ' '); ?> BYN</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 12px; color: var(--text-muted);">На складе</div>
+                        <div style="font-size: 14px; font-weight: 600; color: <?php echo $product['stock'] > 10 ? 'var(--success)' : ($product['stock'] > 0 ? 'var(--warning)' : 'var(--danger)'); ?>">
+                            <?php echo $product['stock']; ?> шт.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
+
+<?php include 'footer.php'; ?>
