@@ -63,7 +63,7 @@ try {
     $stmt = $pdo->prepare("
         SELECT p.name, p.article, 
                COUNT(oi.id) as sales_count,
-               COALESCE(SUM(oi.quantity * oi.price_byn), 0) as total_sales
+               COALESCE(SUM(oi.quantity * oi.price_at_moment_byn), 0) as total_sales
         FROM order_items oi
         JOIN products p ON oi.product_id = p.id
         JOIN orders o ON oi.order_id = o.id
