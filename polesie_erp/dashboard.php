@@ -1,5 +1,4 @@
 <?php
-
 require_once 'config.php';
 
 // Включаем отображение ошибок для отладки
@@ -11,6 +10,42 @@ if (!isset($_SESSION['user_id'])) {
     // Если не авторизован - перенаправляем на страницу входа
     header('Location: index.php');
     exit;
+}
+
+// Определяем функции для получения данных пользователя
+function getUserName() {
+    global $pdo;
+    if (isset($_SESSION['user_id'])) {
+        try {
+            $stmt = $pdo->prepare("SELECT name FROM users WHERE id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+            $user = $stmt->fetch();
+            return $user['name'] ?? 'Пользователь';
+        } catch (PDOException $e) {
+            return 'Пользователь';
+        }
+    }
+    return 'Гость';
+}
+
+function getUserRole() {
+    global $pdo;
+    if (isset($_SESSION['user_id'])) {
+        try {
+            $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+            $user = $stmt->fetch();
+            $roles = [
+                'admin' => 'Администратор',
+                'manager' => 'Менеджер',
+                'operator' => 'Оператор'
+            ];
+            return $roles[$user['role']] ?? ucfirst($user['role'] ?? 'Пользователь');
+        } catch (PDOException $e) {
+            return 'Пользователь';
+        }
+    }
+    return 'Гость';
 }
 
 $page_title = 'Главная панель';
