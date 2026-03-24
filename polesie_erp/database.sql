@@ -230,8 +230,9 @@ INSERT INTO orders (order_number, partner_id, user_id, status, total_amount_byn,
 ('ORD-2024-093', 5, 7, 'shipped', 32000.00, '2024-06-12 11:20:00'),
 ('ORD-2024-094', 9, 3, 'closed', 18500.00, '2024-06-15 16:00:00');
 
--- Товары в новые заказы (исправленные order_id для соответствия существующим заказам)
+-- Товары в заказы (order_id соответствуют существующим заказам 1-9)
 INSERT INTO order_items (order_id, product_id, quantity, price_at_moment_byn) VALUES
+(1, 1, 100, 450.00),
 (2, 2, 20, 580.50),
 (3, 3, 5, 920.00),
 (4, 4, 10, 1250.00),
@@ -240,8 +241,8 @@ INSERT INTO order_items (order_id, product_id, quantity, price_at_moment_byn) VA
 (7, 7, 80, 52.00),
 (8, 8, 25, 180.00),
 (9, 1, 50, 450.00),
-(10, 11, 30, 1150.00),
-(11, 12, 15, 1580.00);
+(9, 11, 30, 1150.00),
+(9, 12, 15, 1580.00);
 
 -- Дополнительные производственные задания
 INSERT INTO production_tasks (task_number, product_id, quantity_plan, quantity_fact, workshop, status, deadline) VALUES
