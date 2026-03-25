@@ -224,78 +224,101 @@ include 'header.php';
 </div>
 
 <!-- Модальное окно создания/редактирования заказа -->
-<div id="orderModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div class="modal-content" style="background: white; border-radius: 12px; padding: 30px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 id="modalTitle">Добавить заказ</h3>
-            <button onclick="closeModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+<div id="orderModal" class="modal" style="display: none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+        <div class="card">
+            <div class="card-header">
+                <h3 id="modalTitle" class="card-title">Добавить заказ</h3>
+                <button onclick="closeModal()" class="btn-close">&times;</button>
+            </div>
+            <div class="card-body">
+                <form id="orderForm" method="POST" action="api/save_order.php">
+                    <input type="hidden" id="orderId" name="id" value="">
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="orderNumber">Номер заказа *</label>
+                            <input type="text" id="orderNumber" name="order_number" required 
+                                   class="form-input"
+                                   placeholder="ORD-2024-XXX">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="status">Статус</label>
+                            <select id="status" name="status" class="form-select">
+                                <option value="new">Новый</option>
+                                <option value="processing">В обработке</option>
+                                <option value="in_progress">В производстве</option>
+                                <option value="ready">Готов</option>
+                                <option value="shipped">Отгружен</option>
+                                <option value="closed">Завершен</option>
+                                <option value="cancelled">Отменен</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="partnerId">Клиент</label>
+                            <select id="partnerId" name="partner_id" class="form-select">
+                                <option value="">Не указан</option>
+                                <?php
+                                try {
+                                    $partners = $pdo->query("SELECT id, name FROM partners ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
+                                    foreach ($partners as $partner) {
+                                        echo '<option value="' . htmlspecialchars($partner['id']) . '">' . htmlspecialchars($partner['name']) . '</option>';
+                                    }
+                                } catch (PDOException $e) {}
+                                ?>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="userId">Менеджер</label>
+                            <select id="userId" name="user_id" class="form-select">
+                                <option value="">Не назначен</option>
+                                <?php
+                                try {
+                                    $users = $pdo->query("SELECT id, full_name FROM users WHERE role IN ('manager', 'admin', 'director') ORDER BY full_name")->fetchAll(PDO::FETCH_ASSOC);
+                                    foreach ($users as $user) {
+                                        echo '<option value="' . htmlspecialchars($user['id']) . '">' . htmlspecialchars($user['full_name']) . '</option>';
+                                    }
+                                } catch (PDOException $e) {}
+                                ?>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="totalAmount">Сумма (BYN)</label>
+                            <input type="number" id="totalAmount" name="total_amount_byn" step="0.01" min="0"
+                                   class="form-input"
+                                   placeholder="0.00">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="createdAt">Дата</label>
+                            <input type="date" id="createdAt" name="created_at"
+                                   class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                        <button type="button" onclick="closeModal()" class="btn btn-secondary">
+                            Отмена
+                        </button>
+                        <button type="submit" class="btn">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        
-        <form id="orderForm" method="POST" action="api/save_order.php">
-            <input type="hidden" id="orderId" name="id" value="">
-            
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #374151;">Номер заказа *</label>
-                <input type="text" id="orderNumber" name="order_number" required 
-                       style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;"
-                       placeholder="ORD-2024-XXX">
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #374151;">Клиент</label>
-                <select id="partnerId" name="partner_id" 
-                        style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
-                    <option value="">Не указан</option>
-                    <?php
-                    try {
-                        $partners = $pdo->query("SELECT id, name FROM partners ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
-                        foreach ($partners as $partner) {
-                            echo '<option value="' . htmlspecialchars($partner['id']) . '">' . htmlspecialchars($partner['name']) . '</option>';
-                        }
-                    } catch (PDOException $e) {}
-                    ?>
-                </select>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #374151;">Статус</label>
-                <select id="status" name="status" 
-                        style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
-                    <option value="new">Новый</option>
-                    <option value="processing">В обработке</option>
-                    <option value="in_progress">В производстве</option>
-                    <option value="ready">Готов</option>
-                    <option value="shipped">Отгружен</option>
-                    <option value="closed">Завершен</option>
-                    <option value="cancelled">Отменен</option>
-                </select>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #374151;">Сумма (BYN)</label>
-                <input type="number" id="totalAmount" name="total_amount_byn" step="0.01" min="0"
-                       style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;"
-                       placeholder="0.00">
-            </div>
-            
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #374151;">Комментарий</label>
-                <textarea id="comment" name="comment" rows="3"
-                          style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;"
-                          placeholder="Дополнительная информация..."></textarea>
-            </div>
-            
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" onclick="closeModal()" 
-                        style="padding: 10px 20px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
-                    Отмена
-                </button>
-                <button type="submit" 
-                        style="padding: 10px 20px; background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
-                    Сохранить
-                </button>
-            </div>
-        </form>
     </div>
 </div>
 
@@ -309,9 +332,10 @@ function openCreateModal() {
     document.getElementById('orderId').value = '';
     document.getElementById('orderNumber').value = '';
     document.getElementById('partnerId').value = '';
+    document.getElementById('userId').value = '';
     document.getElementById('status').value = 'new';
     document.getElementById('totalAmount').value = '';
-    document.getElementById('comment').value = '';
+    document.getElementById('createdAt').value = new Date().toISOString().split('T')[0];
     document.getElementById('orderModal').style.display = 'flex';
 }
 
@@ -328,9 +352,12 @@ function openEditModal(orderId) {
                 document.getElementById('orderId').value = order.id;
                 document.getElementById('orderNumber').value = order.order_number;
                 document.getElementById('partnerId').value = order.partner_id || '';
+                document.getElementById('userId').value = order.user_id || '';
                 document.getElementById('status').value = order.status;
                 document.getElementById('totalAmount').value = order.total_amount_byn || '';
-                document.getElementById('comment').value = order.comment || '';
+                if (order.created_at) {
+                    document.getElementById('createdAt').value = order.created_at.split(' ')[0];
+                }
                 document.getElementById('orderModal').style.display = 'flex';
             } else {
                 alert('Ошибка загрузки данных заказа');
