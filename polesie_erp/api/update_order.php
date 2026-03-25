@@ -25,7 +25,6 @@ $partnerId = isset($_POST['partner_id']) && $_POST['partner_id'] !== '' ? (int)$
 $userId = isset($_POST['user_id']) && $_POST['user_id'] !== '' ? (int)$_POST['user_id'] : null;
 $status = isset($_POST['status']) ? $_POST['status'] : 'new';
 $totalAmount = isset($_POST['total_amount_byn']) && $_POST['total_amount_byn'] !== '' ? (float)$_POST['total_amount_byn'] : 0;
-$createdAt = isset($_POST['created_at']) && $_POST['created_at'] !== '' ? $_POST['created_at'] : date('Y-m-d H:i:s');
 
 if ($id <= 0) {
     echo json_encode(['success' => false, 'message' => 'Неверный ID заказа']);
@@ -33,12 +32,12 @@ if ($id <= 0) {
 }
 
 try {
+    // Обновляем только указанные поля, created_at не меняем
     $stmt = $pdo->prepare("UPDATE orders SET 
         partner_id = ?, 
         user_id = ?,
         status = ?, 
-        total_amount_byn = ?, 
-        created_at = ?
+        total_amount_byn = ?
         WHERE id = ?");
     
     $stmt->execute([
@@ -46,7 +45,6 @@ try {
         $userId,
         $status,
         $totalAmount,
-        $createdAt,
         $id
     ]);
 
