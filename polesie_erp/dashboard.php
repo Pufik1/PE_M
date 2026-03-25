@@ -26,6 +26,9 @@ $active_orders = 0;
 $tasks_in_progress = 0;
 $month_revenue = 0;
 $recent_orders = [];
+$partners_count = 0;
+$order_status_stats = [];
+$monthly_orders_data = [];
 $error = null;
 $debug_info = [];
 
@@ -53,6 +56,34 @@ try {
     $result = $stmt->fetch();
     $month_revenue = (float)($result['total'] ?? 0);
     $debug_info[] = "month_revenue: " . $month_revenue;
+    
+    // Всего контрагентов
+    $stmt = $pdo->query("SELECT COUNT(*) as count FROM partners");
+    $partners_count = (int)$stmt->fetch()['count'];
+    $debug_info[] = "partners_count: " . $partners_count;
+    
+    // Статистика по статусам заказов
+    $stmt = $pdo->query("
+        SELECT status, COUNT(*) as count 
+        FROM orders 
+        GROUP BY status
+    ");
+    $order_status_stats = $stmt->fetchAll();
+    $debug_info[] = "order_status_stats count: " . count($order_status_stats);
+    
+    // Данные для графика заказов по месяцам (последние 6 месяцев)
+    $stmt = $pdo->query("
+        SELECT 
+            DATE_FORMAT(created_at, '%Y-%m') as month,
+            COUNT(*) as order_count,
+            COALESCE(SUM(total_amount_byn), 0) as total_amount
+        FROM orders 
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+        GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+        ORDER BY month ASC
+    ");
+    $monthly_orders_data = $stmt->fetchAll();
+    $debug_info[] = "monthly_orders_data count: " . count($monthly_orders_data);
     
     // Последние заказы
     $stmt = $pdo->query("
@@ -209,41 +240,220 @@ include 'header.php';
         </div>
     </div>
     
-    <!-- Quick Actions -->
+    <!-- Order Status Distribution -->
     <div class="card">
         <div class="card-header">
-            <div class="card-title">Быстрые действия</div>
+            <div class="card-title">Статистика заказов</div>
         </div>
         <div class="card-body">
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                <a href="orders.php?action=new" class="btn" style="justify-content: center;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Новый заказ
-                </a>
-                <a href="products.php" class="btn btn-secondary" style="justify-content: center;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    Каталог
-                </a>
-                <a href="partners.php" class="btn btn-secondary" style="justify-content: center;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    Контрагенты
-                </a>
-                <a href="reports.php" class="btn btn-secondary" style="justify-content: center;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Отчеты
-                </a>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                <?php 
+                $status_labels = [
+                    'new' => ['label' => 'Новые', 'class' => 'badge-blue'],
+                    'processing' => ['label' => 'В работе', 'class' => 'badge-yellow'],
+                    'in_progress' => ['label' => 'Выполняются', 'class' => 'badge-orange'],
+                    'ready' => ['label' => 'Готовы', 'class' => 'badge-green'],
+                    'shipped' => ['label' => 'Отгружены', 'class' => 'badge-purple'],
+                    'closed' => ['label' => 'Закрыты', 'class' => 'badge-green'],
+                    'cancelled' => ['label' => 'Отменены', 'class' => 'badge-red']
+                ];
+                foreach ($order_status_stats as $stat): 
+                    $status_info = $status_labels[$stat['status']] ?? ['label' => $stat['status'], 'class' => 'badge-blue'];
+                ?>
+                <div style="background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;"><?= $status_info['label'] ?></div>
+                    <div style="font-size: 20px; font-weight: 700; color: var(--text-primary);"><?= (int)$stat['count'] ?></div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Всего контрагентов:</div>
+                <div style="font-size: 18px; font-weight: 600; color: var(--primary-light);"><?= number_format($partners_count) ?></div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Chart Section -->
+<div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+        <div class="card-title">Динамика заказов (последние 6 месяцев)</div>
+    </div>
+    <div class="card-body">
+        <canvas id="ordersChart" height="80"></canvas>
+    </div>
+</div>
 <?php endif; ?>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('ordersChart').getContext('2d');
+    
+    // Данные из PHP
+    const monthlyData = <?= json_encode($monthly_orders_data) ?>;
+    
+    const labels = monthlyData.map(item => {
+        const [year, month] = item.month.split('-');
+        return `${month}.${year}`;
+    });
+    const orderCounts = monthlyData.map(item => parseInt(item.order_count));
+    const totalAmounts = monthlyData.map(item => parseFloat(item.total_amount));
+    
+    // Создаем график
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Количество заказов',
+                    data: orderCounts,
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y',
+                    borderRadius: 6
+                },
+                {
+                    label: 'Сумма (BYN)',
+                    data: totalAmounts,
+                    type: 'line',
+                    borderColor: 'rgba(139, 92, 246, 1)',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#9ca3af',
+                        font: {
+                            family: 'Inter',
+                            size: 12
+                        },
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    titleColor: '#f9fafb',
+                    bodyColor: '#9ca3af',
+                    borderColor: '#374151',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                if (context.dataset.type === 'line') {
+                                    label += new Intl.NumberFormat('ru-BY', { 
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2 
+                                    }).format(context.parsed.y) + ' BYN';
+                                } else {
+                                    label += context.parsed.y;
+                                }
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(55, 65, 81, 0.5)'
+                    },
+                    ticks: {
+                        color: '#9ca3af',
+                        font: {
+                            family: 'Inter',
+                            size: 11
+                        }
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    grid: {
+                        color: 'rgba(55, 65, 81, 0.5)'
+                    },
+                    ticks: {
+                        color: '#9ca3af',
+                        font: {
+                            family: 'Inter',
+                            size: 11
+                        },
+                        callback: function(value) {
+                            return Math.round(value);
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Заказы (шт)',
+                        color: '#6b7280',
+                        font: {
+                            family: 'Inter',
+                            size: 11
+                        }
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        color: '#a78bfa',
+                        font: {
+                            family: 'Inter',
+                            size: 11
+                        },
+                        callback: function(value) {
+                            return value.toLocaleString('ru-BY') + ' BYN';
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Сумма (BYN)',
+                        color: '#a78bfa',
+                        font: {
+                            family: 'Inter',
+                            size: 11
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
 
 <?php include 'footer.php'; ?>
