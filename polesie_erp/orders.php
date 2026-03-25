@@ -233,7 +233,7 @@ include 'header.php';
                 <button onclick="closeModal()" class="btn-close">&times;</button>
             </div>
             <div class="card-body">
-                <form id="orderForm" method="POST" action="api/save_order.php">
+                <form id="orderForm" method="POST" action="">
                     <input type="hidden" id="orderId" name="id" value="">
                     
                     <div class="grid-2">
@@ -299,8 +299,8 @@ include 'header.php';
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label" for="createdAt">Дата</label>
-                            <input type="date" id="createdAt" name="created_at"
+                            <label class="form-label" for="createdAt">Дата создания</label>
+                            <input type="datetime-local" id="createdAt" name="created_at"
                                    class="form-input">
                         </div>
                     </div>
@@ -335,7 +335,13 @@ function openCreateModal() {
     document.getElementById('userId').value = '';
     document.getElementById('status').value = 'new';
     document.getElementById('totalAmount').value = '';
-    document.getElementById('createdAt').value = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const localDateTime = now.getFullYear() + '-' + 
+                         String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                         String(now.getDate()).padStart(2, '0') + 'T' + 
+                         String(now.getHours()).padStart(2, '0') + ':' + 
+                         String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('createdAt').value = localDateTime;
     document.getElementById('orderModal').style.display = 'flex';
 }
 
@@ -356,7 +362,13 @@ function openEditModal(orderId) {
                 document.getElementById('status').value = order.status;
                 document.getElementById('totalAmount').value = order.total_amount_byn || '';
                 if (order.created_at) {
-                    document.getElementById('createdAt').value = order.created_at.split(' ')[0];
+                    const createdAtDate = new Date(order.created_at);
+                    const localDateTime = createdAtDate.getFullYear() + '-' + 
+                                         String(createdAtDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                                         String(createdAtDate.getDate()).padStart(2, '0') + 'T' + 
+                                         String(createdAtDate.getHours()).padStart(2, '0') + ':' + 
+                                         String(createdAtDate.getMinutes()).padStart(2, '0');
+                    document.getElementById('createdAt').value = localDateTime;
                 }
                 document.getElementById('orderModal').style.display = 'flex';
             } else {

@@ -46,9 +46,8 @@ CREATE TABLE orders (
     order_number VARCHAR(20) NOT NULL UNIQUE,
     partner_id INT,
     user_id INT, -- Менеджер
-    status ENUM('new', 'processing', 'ready', 'shipped', 'closed') DEFAULT 'new',
+    status ENUM('new', 'processing', 'in_progress', 'ready', 'shipped', 'closed', 'cancelled') DEFAULT 'new',
     total_amount_byn DECIMAL(12, 2),
-    comment TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (partner_id) REFERENCES partners(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
