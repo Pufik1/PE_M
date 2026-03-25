@@ -22,10 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Получение данных из формы
 $orderNumber = isset($_POST['order_number']) ? trim($_POST['order_number']) : '';
 $partnerId = isset($_POST['partner_id']) && $_POST['partner_id'] !== '' ? (int)$_POST['partner_id'] : null;
-$userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+$userId = isset($_POST['user_id']) && $_POST['user_id'] !== '' ? (int)$_POST['user_id'] : null;
 $status = isset($_POST['status']) ? $_POST['status'] : 'new';
 $totalAmount = isset($_POST['total_amount_byn']) && $_POST['total_amount_byn'] !== '' ? (float)$_POST['total_amount_byn'] : 0;
-$comment = isset($_POST['comment']) ? $_POST['comment'] : '';
+$createdAt = isset($_POST['created_at']) && $_POST['created_at'] !== '' ? $_POST['created_at'] : date('Y-m-d H:i:s');
 
 if (empty($orderNumber)) {
     echo json_encode(['success' => false, 'message' => 'Номер заказа обязателен']);
@@ -33,7 +33,7 @@ if (empty($orderNumber)) {
 }
 
 try {
-    $stmt = $pdo->prepare("INSERT INTO orders (order_number, partner_id, user_id, status, total_amount_byn, comment) 
+    $stmt = $pdo->prepare("INSERT INTO orders (order_number, partner_id, user_id, status, total_amount_byn, created_at) 
                            VALUES (?, ?, ?, ?, ?, ?)");
     
     $stmt->execute([
@@ -42,7 +42,7 @@ try {
         $userId,
         $status,
         $totalAmount,
-        $comment
+        $createdAt
     ]);
 
     $newOrderId = $pdo->lastInsertId();
