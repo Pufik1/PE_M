@@ -380,29 +380,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        /* Стили для графика */
-        .chart-section {
-            background: var(--bg-primary);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            margin-bottom: 24px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .chart-section h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 16px;
-        }
-
-        #activityChart {
-            width: 100%;
-            height: 180px;
-        }
-
         /* Стили для секции функций */
         .features-section {
             margin-top: 24px;
@@ -478,12 +455,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <h1>Полесьеэлектромаш</h1>
                 <p class="subtitle">Корпоративная система управления предприятием</p>
-            </div>
-            
-            <!-- График активности -->
-            <div class="chart-section">
-                <h3 class="info-title">Статистика системы</h3>
-                <canvas id="activityChart"></canvas>
             </div>
             
             <div class="info-section">
@@ -583,95 +554,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </div>
-    
-    <!-- Подключаем Chart.js для графика -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Данные для графика активности
-        const chartData = {
-            labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-            datasets: [{
-                label: 'Активность пользователей',
-                data: [45, 52, 38, 65, 48, 32, 28],
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#3b82f6',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
-        };
-        
-        const chartConfig = {
-            type: 'line',
-            data: chartData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: '#1f2937',
-                        titleColor: '#f9fafb',
-                        bodyColor: '#9ca3af',
-                        borderColor: '#374151',
-                        borderWidth: 1,
-                        padding: 12,
-                        displayColors: false,
-                        callbacks: {
-                            label: function(context) {
-                                return context.parsed.y + ' пользователей';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: 'rgba(55, 65, 81, 0.5)',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            color: '#9ca3af',
-                            font: {
-                                size: 11
-                            }
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: 'rgba(55, 65, 81, 0.5)',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            color: '#9ca3af',
-                            font: {
-                                size: 11
-                            },
-                            callback: function(value) {
-                                return value;
-                            }
-                        },
-                        beginAtZero: true
-                    }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                }
-            }
-        };
-        
-        // Инициализация графика после загрузки DOM
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('activityChart').getContext('2d');
-            new Chart(ctx, chartConfig);
-        });
-    </script>
 </body>
 </html>
