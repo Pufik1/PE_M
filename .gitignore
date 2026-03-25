@@ -1,6 +1,1 @@
-# Database migration and SQL files are typically source code and should not be ignored
-# No build artifacts, dependencies, or temporary files detected in changes
-# Current .gitignore is empty and no new ignores are needed
-
-# The SQL and PHP files appear to be source code, not build artifacts
-# Therefore, no entries need to be added to .gitignore
+Nothing needs to be added to the .gitignore file based on the provided changes. The only modified file is 'polesie_erp/orders.php', which appears to be a source code file and should not be ignored.

@@ -224,101 +224,99 @@ include 'header.php';
 </div>
 
 <!-- Модальное окно создания/редактирования заказа -->
-<div id="orderModal" class="modal" style="display: none;">
-    <div class="modal-overlay"></div>
-    <div class="modal-content">
-        <div class="card">
-            <div class="card-header">
-                <h3 id="modalTitle" class="card-title">Добавить заказ</h3>
-                <button onclick="closeModal()" class="btn-close">&times;</button>
-            </div>
-            <div class="card-body">
-                <form id="orderForm" method="POST" action="">
-                    <input type="hidden" id="orderId" name="id" value="">
-                    
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label" for="orderNumber">Номер заказа *</label>
-                            <input type="text" id="orderNumber" name="order_number" required 
-                                   class="form-input"
-                                   placeholder="ORD-2024-XXX">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="status">Статус</label>
-                            <select id="status" name="status" class="form-select">
-                                <option value="new">Новый</option>
-                                <option value="processing">В обработке</option>
-                                <option value="in_progress">В производстве</option>
-                                <option value="ready">Готов</option>
-                                <option value="shipped">Отгружен</option>
-                                <option value="closed">Завершен</option>
-                                <option value="cancelled">Отменен</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label" for="partnerId">Клиент</label>
-                            <select id="partnerId" name="partner_id" class="form-select">
-                                <option value="">Не указан</option>
-                                <?php
-                                try {
-                                    $partners = $pdo->query("SELECT id, name FROM partners ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
-                                    foreach ($partners as $partner) {
-                                        echo '<option value="' . htmlspecialchars($partner['id']) . '">' . htmlspecialchars($partner['name']) . '</option>';
-                                    }
-                                } catch (PDOException $e) {}
-                                ?>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="userId">Менеджер</label>
-                            <select id="userId" name="user_id" class="form-select">
-                                <option value="">Не назначен</option>
-                                <?php
-                                try {
-                                    $users = $pdo->query("SELECT id, full_name FROM users WHERE role IN ('manager', 'admin', 'director') ORDER BY full_name")->fetchAll(PDO::FETCH_ASSOC);
-                                    foreach ($users as $user) {
-                                        echo '<option value="' . htmlspecialchars($user['id']) . '">' . htmlspecialchars($user['full_name']) . '</option>';
-                                    }
-                                } catch (PDOException $e) {}
-                                ?>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label" for="totalAmount">Сумма (BYN)</label>
-                            <input type="number" id="totalAmount" name="total_amount_byn" step="0.01" min="0"
-                                   class="form-input"
-                                   placeholder="0.00">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="createdAt">Дата создания</label>
-                            <input type="datetime-local" id="createdAt" name="created_at"
-                                   class="form-input">
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
-                        <button type="button" onclick="closeModal()" class="btn btn-secondary">
-                            Отмена
-                        </button>
-                        <button type="submit" class="btn">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            Сохранить
-                        </button>
-                    </div>
-                </form>
-            </div>
+<div id="orderModal" class="modal-overlay" style="display: none;" onclick="closeModal(event)">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="card-header" style="border-bottom: 1px solid var(--border); padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 id="modalTitle" style="margin: 0;">Добавить заказ</h3>
+            <button onclick="closeModalDirect()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
+        <form id="orderForm" method="POST" action="" style="padding: 24px;">
+            <input type="hidden" id="orderId" name="id" value="">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Номер заказа *</label>
+                    <input type="text" id="orderNumber" name="order_number" required 
+                           style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;"
+                           placeholder="ORD-2024-XXX">
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Статус</label>
+                    <select id="status" name="status" 
+                            style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        <option value="new">Новый</option>
+                        <option value="processing">В обработке</option>
+                        <option value="in_progress">В производстве</option>
+                        <option value="ready">Готов</option>
+                        <option value="shipped">Отгружен</option>
+                        <option value="closed">Завершен</option>
+                        <option value="cancelled">Отменен</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Клиент</label>
+                    <select id="partnerId" name="partner_id" 
+                            style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        <option value="">Не указан</option>
+                        <?php
+                        try {
+                            $partners = $pdo->query("SELECT id, name FROM partners ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
+                            foreach ($partners as $partner) {
+                                echo '<option value="' . htmlspecialchars($partner['id']) . '">' . htmlspecialchars($partner['name']) . '</option>';
+                            }
+                        } catch (PDOException $e) {}
+                        ?>
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Менеджер</label>
+                    <select id="userId" name="user_id" 
+                            style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                        <option value="">Не назначен</option>
+                        <?php
+                        try {
+                            $users = $pdo->query("SELECT id, full_name FROM users WHERE role IN ('manager', 'admin', 'director') ORDER BY full_name")->fetchAll(PDO::FETCH_ASSOC);
+                            foreach ($users as $user) {
+                                echo '<option value="' . htmlspecialchars($user['id']) . '">' . htmlspecialchars($user['full_name']) . '</option>';
+                            }
+                        } catch (PDOException $e) {}
+                        ?>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Сумма (BYN)</label>
+                    <input type="number" id="totalAmount" name="total_amount_byn" step="0.01" min="0"
+                           style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;"
+                           placeholder="0.00">
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Дата создания</label>
+                    <input type="datetime-local" id="createdAt" name="created_at"
+                           style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
+                </div>
+            </div>
+            
+            <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" onclick="closeModalDirect()" class="btn btn-secondary">
+                    Отмена
+                </button>
+                <button type="submit" class="btn">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Сохранить
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -381,17 +379,17 @@ function openEditModal(orderId) {
         });
 }
 
-function closeModal() {
+function closeModal(event) {
+    if (event && event.target.classList.contains('modal-overlay')) {
+        closeModalDirect();
+    }
+}
+
+function closeModalDirect() {
     document.getElementById('orderModal').style.display = 'none';
 }
 
-// Закрытие по клику вне модального окна
-window.onclick = function(event) {
-    const modal = document.getElementById('orderModal');
-    if (event.target === modal) {
-        closeModal();
-    }
-}
+// Закрытие по клику вне модального окна уже реализовано через onclick на modal-overlay
 
 // Обработка отправки формы
 document.getElementById('orderForm').addEventListener('submit', function(e) {
@@ -408,7 +406,7 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            closeModal();
+            closeModalDirect();
             location.reload();
         } else {
             alert('Ошибка: ' + data.message);
