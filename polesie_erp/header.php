@@ -187,15 +187,15 @@ if (!isset($active_page)) $active_page = 'dashboard';
         /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-            margin-bottom: 32px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
         }
         .stat-card {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 10px;
+            padding: 16px;
             transition: all 0.3s;
         }
         .stat-card:hover {
@@ -205,34 +205,34 @@ if (!isset($active_page)) $active_page = 'dashboard';
         }
         .stat-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         .stat-title {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         .stat-icon {
-            width: 44px; height: 44px;
-            border-radius: 10px;
+            width: 36px; height: 36px;
+            border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
         }
         .stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: var(--primary-light); border: 1px solid rgba(59, 130, 246, 0.3); }
         .stat-icon.green { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
         .stat-icon.orange { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
         .stat-icon.purple { background: rgba(139, 92, 246, 0.15); color: var(--purple); border: 1px solid rgba(139, 92, 246, 0.3); }
         .stat-value {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 4px;
-            letter-spacing: -1px;
+            margin-bottom: 2px;
+            letter-spacing: -0.5px;
         }
         .stat-change {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-muted);
         }
 
