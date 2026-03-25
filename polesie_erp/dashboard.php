@@ -277,10 +277,17 @@ include 'header.php';
 <!-- Chart Section -->
 <div class="card" style="margin-top: 24px;">
     <div class="card-header">
-        <div class="card-title">Динамика заказов (последние 6 месяцев)</div>
+        <div class="card-title">Распределение заказов по статусам</div>
     </div>
     <div class="card-body">
-        <canvas id="ordersChart" height="80"></canvas>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center;">
+            <div style="position: relative; height: 300px;">
+                <canvas id="statusChart"></canvas>
+            </div>
+            <div id="statusLegend" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Легенда будет заполнена динамически -->
+            </div>
+        </div>
     </div>
 </div>
 <?php endif; ?>
@@ -289,70 +296,68 @@ include 'header.php';
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('ordersChart').getContext('2d');
+    const ctx = document.getElementById('statusChart').getContext('2d');
     
     // Данные из PHP
-    const monthlyData = <?= json_encode($monthly_orders_data) ?>;
+    const statusStats = <?= json_encode($order_status_stats) ?>;
     
-    const labels = monthlyData.map(item => {
-        const [year, month] = item.month.split('-');
-        return `${month}.${year}`;
+    // Конфигурация статусов
+    const statusConfig = {
+        'new': { label: 'Новые', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.8)' },
+        'processing': { label: 'В работе', color: '#eab308', bg: 'rgba(234, 179, 8, 0.8)' },
+        'ready': { label: 'Готовы', color: '#22c55e', bg: 'rgba(34, 197, 94, 0.8)' },
+        'shipped': { label: 'Отгружены', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.8)' },
+        'closed': { label: 'Закрыты', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.8)' },
+        'cancelled': { label: 'Отменены', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.8)' }
+    };
+    
+    // Подготовка данных
+    const labels = [];
+    const data = [];
+    const colors = [];
+    const bgColors = [];
+    
+    statusStats.forEach(stat => {
+        const config = statusConfig[stat.status] || { 
+            label: stat.status, 
+            color: '#6b7280', 
+            bg: 'rgba(107, 114, 128, 0.8)' 
+        };
+        labels.push(config.label);
+        data.push(parseInt(stat.count));
+        colors.push(config.color);
+        bgColors.push(config.bg);
     });
-    const orderCounts = monthlyData.map(item => parseInt(item.order_count));
-    const totalAmounts = monthlyData.map(item => parseFloat(item.total_amount));
+    
+    // Общее количество заказов
+    const totalOrders = data.reduce((sum, val) => sum + val, 0);
     
     // Создаем график
     new Chart(ctx, {
-        type: 'bar',
+        type: 'doughnut',
         data: {
             labels: labels,
-            datasets: [
-                {
-                    label: 'Количество заказов',
-                    data: orderCounts,
-                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                    borderColor: 'rgba(59, 130, 246, 1)',
-                    borderWidth: 1,
-                    yAxisID: 'y',
-                    borderRadius: 6
-                },
-                {
-                    label: 'Сумма (BYN)',
-                    data: totalAmounts,
-                    type: 'line',
-                    borderColor: 'rgba(139, 92, 246, 1)',
-                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: 'rgba(139, 92, 246, 1)',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    yAxisID: 'y1'
-                }
-            ]
+            datasets: [{
+                data: data,
+                backgroundColor: bgColors,
+                borderColor: '#1a1a2e',
+                borderWidth: 3,
+                hoverOffset: 10
+            }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false
+            cutout: '65%',
+            animation: {
+                animateScale: true,
+                animateRotate: true,
+                duration: 1000,
+                easing: 'easeOutQuart'
             },
             plugins: {
                 legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        color: '#9ca3af',
-                        font: {
-                            family: 'Inter',
-                            size: 12
-                        },
-                        usePointStyle: true
-                    }
+                    display: false
                 },
                 tooltip: {
                     backgroundColor: 'rgba(17, 24, 39, 0.95)',
@@ -361,98 +366,52 @@ document.addEventListener('DOMContentLoaded', function() {
                     borderColor: '#374151',
                     borderWidth: 1,
                     padding: 12,
-                    displayColors: true,
+                    cornerRadius: 8,
                     callbacks: {
                         label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            if (context.parsed.y !== null) {
-                                if (context.dataset.type === 'line') {
-                                    label += new Intl.NumberFormat('ru-BY', { 
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2 
-                                    }).format(context.parsed.y) + ' BYN';
-                                } else {
-                                    label += context.parsed.y;
-                                }
-                            }
-                            return label;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        color: 'rgba(55, 65, 81, 0.5)'
-                    },
-                    ticks: {
-                        color: '#9ca3af',
-                        font: {
-                            family: 'Inter',
-                            size: 11
-                        }
-                    }
-                },
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    grid: {
-                        color: 'rgba(55, 65, 81, 0.5)'
-                    },
-                    ticks: {
-                        color: '#9ca3af',
-                        font: {
-                            family: 'Inter',
-                            size: 11
-                        },
-                        callback: function(value) {
-                            return Math.round(value);
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: 'Заказы (шт)',
-                        color: '#6b7280',
-                        font: {
-                            family: 'Inter',
-                            size: 11
-                        }
-                    }
-                },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    grid: {
-                        drawOnChartArea: false
-                    },
-                    ticks: {
-                        color: '#a78bfa',
-                        font: {
-                            family: 'Inter',
-                            size: 11
-                        },
-                        callback: function(value) {
-                            return value.toLocaleString('ru-BY') + ' BYN';
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: 'Сумма (BYN)',
-                        color: '#a78bfa',
-                        font: {
-                            family: 'Inter',
-                            size: 11
+                            const value = context.parsed;
+                            const percentage = totalOrders > 0 ? ((value / totalOrders) * 100).toFixed(1) : 0;
+                            return `${value} заказов (${percentage}%)`;
                         }
                     }
                 }
             }
         }
     });
+    
+    // Заполняем легенду
+    const legendContainer = document.getElementById('statusLegend');
+    let legendHTML = '';
+    
+    statusStats.forEach((stat, index) => {
+        const config = statusConfig[stat.status] || { 
+            label: stat.status, 
+            color: '#6b7280' 
+        };
+        const count = parseInt(stat.count);
+        const percentage = totalOrders > 0 ? ((count / totalOrders) * 100).toFixed(1) : 0;
+        
+        legendHTML += `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); transition: transform 0.2s;" 
+                 onmouseover="this.style.transform='translateX(4px)'" 
+                 onmouseout="this.style.transform='translateX(0)'">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 12px; height: 12px; border-radius: 3px; background: ${config.color};"></div>
+                    <span style="color: var(--text-primary); font-size: 13px; font-weight: 500;">${config.label}</span>
+                </div>
+                <div style="text-align: right;">
+                    <div style="color: var(--text-primary); font-size: 14px; font-weight: 700;">${count}</div>
+                    <div style="color: var(--text-muted); font-size: 11px;">${percentage}%</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    if (totalOrders === 0) {
+        legendHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">Нет данных о заказах</div>';
+    }
+    
+    legendContainer.innerHTML = legendHTML;
 });
 </script>
 
