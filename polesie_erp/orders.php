@@ -274,6 +274,16 @@ include 'header.php';
                 </div>
                 
                 <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Сумма (BYN)</label>
+                    <input type="number" id="totalAmount" name="total_amount_byn" step="0.01" min="0"
+                           style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;"
+                           placeholder="0.00">
+                </div>
+            </div>
+            
+            <!-- Поля только для редактирования -->
+            <div id="editFields" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
                     <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Менеджер</label>
                     <select id="userId" name="user_id" 
                             style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;">
@@ -287,15 +297,6 @@ include 'header.php';
                         } catch (PDOException $e) {}
                         ?>
                     </select>
-                </div>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-                <div>
-                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Сумма (BYN)</label>
-                    <input type="number" id="totalAmount" name="total_amount_byn" step="0.01" min="0"
-                           style="width: 100%; padding: 10px 14px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 14px;"
-                           placeholder="0.00">
                 </div>
                 
                 <div>
@@ -340,6 +341,8 @@ function openCreateModal() {
                          String(now.getHours()).padStart(2, '0') + ':' + 
                          String(now.getMinutes()).padStart(2, '0');
     document.getElementById('createdAt').value = localDateTime;
+    // Скрываем поля для редактирования
+    document.getElementById('editFields').style.display = 'none';
     document.getElementById('orderModal').style.display = 'flex';
 }
 
@@ -368,6 +371,8 @@ function openEditModal(orderId) {
                                          String(createdAtDate.getMinutes()).padStart(2, '0');
                     document.getElementById('createdAt').value = localDateTime;
                 }
+                // Показываем поля для редактирования
+                document.getElementById('editFields').style.display = 'grid';
                 document.getElementById('orderModal').style.display = 'flex';
             } else {
                 alert('Ошибка загрузки данных заказа');
