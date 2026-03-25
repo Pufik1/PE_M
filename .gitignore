@@ -1,54 +1,6 @@
-```php
-# Compiled and build artifacts
-*.pyc
-__pycache__/
-*.o
-*.obj
-dist/
-build/
-target/
+# Database migration and SQL files are typically source code and should not be ignored
+# No build artifacts, dependencies, or temporary files detected in changes
+# Current .gitignore is empty and no new ignores are needed
 
-# Dependencies
-.venv/
-venv/
-node_modules/
-vendor/
-composer.lock
-
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-*.swo
-
-# Environment
-.env
-.env.local
-.env.*
-
-# Editors
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Cache
-.cache/
-.mypy_cache/
-.pytest_cache/
-.gradle/
-```
+# The SQL and PHP files appear to be source code, not build artifacts
+# Therefore, no entries need to be added to .gitignore
